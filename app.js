@@ -2274,7 +2274,7 @@ function renderNews(selectedCase) {
           <span class="tag">${policy.showNewsCategory || state.revealed ? newsLabel(item.category) : "未分类"}</span>
           ${saved ? `<span class="tag real">已判断</span>` : `<span class="tag">未判断</span>`}
         </div>
-        <strong>${item.title}</strong>
+        <strong>${escapeHtml(item.title)}</strong>
         <p>${policy.showNewsHint || state.revealed ? newsHint(item.category) : "考试模式隐藏新闻提示，请自己判断它是否重要。"}</p>
         <div class="news-judgment" data-news-key="${escapeHtml(key)}">
           <label>
@@ -3635,8 +3635,8 @@ function renderMission(selectedCase) {
   elements.missionPanel.innerHTML = `
     ${state.activeRemediation ? `
       <section class="mission-section active-remediation">
-        <strong>补练处方 · ${hideMeta ? "匿名弱项训练" : state.activeRemediation.title}</strong>
-        <p>${hideMeta ? "考试模式隐藏补练来源和案例主题。继续执行更严格的仓位、记录和复盘纪律。" : state.activeRemediation.constraint}</p>
+        <strong>补练处方 · ${escapeHtml(hideMeta ? "匿名弱项训练" : state.activeRemediation.title)}</strong>
+        <p>${escapeHtml(hideMeta ? "考试模式隐藏补练来源和案例主题。继续执行更严格的仓位、记录和复盘纪律。" : state.activeRemediation.constraint)}</p>
         <ul class="mission-list">${(hideMeta ? ["先按原处方限制交易频率和仓位。", "每次动作必须写清证据、风险和失效条件。", "复盘后再查看具体弱项来源。"] : state.activeRemediation.checklist).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
       </section>
     ` : ""}
@@ -3654,8 +3654,8 @@ function renderMission(selectedCase) {
       </section>
     ` : ""}
     <section class="mission-section">
-      <strong>${plan.focus}</strong>
-      <p>${plan.objective}</p>
+      <strong>${escapeHtml(plan.focus)}</strong>
+      <p>${escapeHtml(plan.objective)}</p>
       <div class="mission-score">
         <div class="score-card"><span>任务评分</span><strong class="${mission.score >= 80 ? "positive" : mission.score < 60 ? "negative" : ""}">${mission.score}/100</strong></div>
         <div class="score-card"><span>交易次数</span><strong>${mission.stats.tradeCount}</strong></div>
@@ -3700,8 +3700,8 @@ function renderMission(selectedCase) {
       <ul class="mission-status-list">
         ${contractStatus.items.map((item) => `
           <li class="mission-status-item is-${item.status}">
-            <strong>${missionStatusLabel(item.status)} · ${item.title}</strong>
-            <p>${item.detail}</p>
+            <strong>${escapeHtml(missionStatusLabel(item.status))} · ${escapeHtml(item.title)}</strong>
+            <p>${escapeHtml(item.detail)}</p>
           </li>
         `).join("")}
       </ul>
@@ -3744,8 +3744,8 @@ function renderMission(selectedCase) {
       <ul class="mission-status-list">
         ${allocationStatus.items.map((item) => `
           <li class="mission-status-item is-${item.status}">
-            <strong>${missionStatusLabel(item.status)} · ${item.title}</strong>
-            <p>${item.detail}</p>
+            <strong>${escapeHtml(missionStatusLabel(item.status))} · ${escapeHtml(item.title)}</strong>
+            <p>${escapeHtml(item.detail)}</p>
           </li>
         `).join("")}
       </ul>
@@ -3798,30 +3798,30 @@ function renderMission(selectedCase) {
       <ul class="mission-status-list">
         ${thesisQuality.items.map((item) => `
           <li class="mission-status-item is-${item.status}">
-            <strong>${missionStatusLabel(item.status)} · ${item.title}</strong>
-            <p>${item.detail}</p>
+            <strong>${escapeHtml(missionStatusLabel(item.status))} · ${escapeHtml(item.title)}</strong>
+            <p>${escapeHtml(item.detail)}</p>
           </li>
         `).join("")}
       </ul>
     </section>
     <section class="mission-section">
       <strong>开仓前检查</strong>
-      <ul class="mission-list">${plan.checklist.map((item) => `<li>${item}</li>`).join("")}</ul>
+      <ul class="mission-list">${plan.checklist.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
     </section>
     <section class="mission-section">
       <strong>通关条件</strong>
       <ul class="mission-status-list">
         ${mission.items.map((item) => `
           <li class="mission-status-item is-${item.status}">
-            <strong>${missionStatusLabel(item.status)} · ${item.title}</strong>
-            <p>${item.detail}</p>
+            <strong>${escapeHtml(missionStatusLabel(item.status))} · ${escapeHtml(item.title)}</strong>
+            <p>${escapeHtml(item.detail)}</p>
           </li>
         `).join("")}
       </ul>
     </section>
     <section class="mission-section">
       <strong>${state.revealed ? "补练建议" : "常见陷阱"}</strong>
-      <p>${state.revealed && !mission.passed ? plan.drill : plan.trap}</p>
+      <p>${escapeHtml(state.revealed && !mission.passed ? plan.drill : plan.trap)}</p>
     </section>
   `;
 }
@@ -4571,15 +4571,15 @@ function renderRevealReadinessCard(readiness = buildRevealReadiness(getCase())) 
       <div class="readiness-head">
         <div>
           <strong>结束前纪律检查</strong>
-          <p>${readiness.summary}</p>
+          <p>${escapeHtml(readiness.summary)}</p>
         </div>
         <span class="readiness-score">${readiness.score}/100</span>
       </div>
       <ul class="mission-status-list">
         ${readiness.items.map((item) => `
           <li class="mission-status-item is-${item.status}">
-            <strong>${missionStatusLabel(item.status)} · ${item.title}</strong>
-            <p>${item.detail}</p>
+            <strong>${escapeHtml(missionStatusLabel(item.status))} · ${escapeHtml(item.title)}</strong>
+            <p>${escapeHtml(item.detail)}</p>
           </li>
         `).join("")}
       </ul>

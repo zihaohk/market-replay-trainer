@@ -198,6 +198,13 @@ context.maliciousPackageText = JSON.stringify({
     ],
   }],
   news: [{ day: 0, title: "Unsafe <img src=x>", category: "important" }],
+  mission: {
+    objective: "Mission <script>alert(3)</script>",
+    checklist: ["Check <img src=x onerror=alert(3)>"],
+    passCriteria: ["Pass <svg onload=alert(3)>"],
+    trap: "Trap <iframe src=javascript:alert(3)>",
+    drill: "Drill <script>alert(3)</script>",
+  },
   learning: {
     title: "Lesson <img src=x onerror=alert(2)>",
     concept: "Concept <script>alert(2)</script>",
@@ -220,8 +227,10 @@ const escapedMaliciousUi = vm.runInContext(`
   renderCaseBrief(maliciousCase);
   renderWatchlist(maliciousCase);
   renderRelativeStrengthPanel(maliciousCase);
+  renderNews(maliciousCase);
   renderLearning(maliciousCase);
-  elements.caseList.innerHTML + elements.caseTags.innerHTML + elements.watchlist.innerHTML + elements.relativeStrengthPanel.innerHTML + elements.lessonPanel.innerHTML;
+  renderMission(maliciousCase);
+  elements.caseList.innerHTML + elements.caseTags.innerHTML + elements.watchlist.innerHTML + elements.relativeStrengthPanel.innerHTML + elements.newsFeed.innerHTML + elements.lessonPanel.innerHTML + elements.missionPanel.innerHTML;
 `, context);
 assert(!escapedMaliciousUi.includes("<img src=x onerror=alert(1)>"), "imported package title should not render raw image HTML");
 assert(!escapedMaliciousUi.includes("<script>alert(1)</script>"), "imported package brief should not render raw script HTML");
@@ -229,10 +238,26 @@ assert(!escapedMaliciousUi.includes("<svg onload=alert(1)>"), "imported package 
 assert(!escapedMaliciousUi.includes("<script>alert(2)</script>"), "imported package lesson should not render raw script HTML");
 assert(!escapedMaliciousUi.includes("<iframe src=javascript:alert(2)>"), "imported package lesson rules should not render raw iframe HTML");
 assert(!escapedMaliciousUi.includes("<svg onload=alert(2)>"), "imported package lesson terms should not render raw SVG HTML");
+assert(!escapedMaliciousUi.includes("<img src=x>"), "imported package news should not render raw image HTML");
+assert(!escapedMaliciousUi.includes("<script>alert(3)</script>"), "imported package mission should not render raw script HTML");
+assert(!escapedMaliciousUi.includes("<iframe src=javascript:alert(3)>"), "imported package mission traps should not render raw iframe HTML");
 assert(!escapedMaliciousUi.includes('data-symbol="BAD" onclick="alert(1)"'), "imported package symbols should not break out of data attributes");
 assert(escapedMaliciousUi.includes("&lt;img src=x onerror=alert(1)&gt;"), "imported package title should be escaped as visible text");
 assert(escapedMaliciousUi.includes("&lt;svg onload=alert(1)&gt;"), "imported package asset name should be escaped as visible text");
 assert(escapedMaliciousUi.includes("&lt;script&gt;alert(2)&lt;/script&gt;"), "imported package lesson scripts should be escaped as visible text");
+assert(escapedMaliciousUi.includes("Unsafe &lt;img src=x&gt;"), "imported package news should be escaped as visible text");
+assert(escapedMaliciousUi.includes("&lt;script&gt;alert(3)&lt;/script&gt;"), "imported package mission scripts should be escaped as visible text");
+const maliciousReadinessHtml = vm.runInContext(`
+  renderRevealReadinessCard({
+    level: "warn",
+    score: 70,
+    summary: "Summary <script>alert(4)</script>",
+    items: [{ status: "warn", title: "Title <img src=x onerror=alert(4)>", detail: "Detail <iframe src=javascript:alert(4)>" }],
+  });
+`, context);
+assert(!maliciousReadinessHtml.includes("<script>alert(4)</script>"), "reveal readiness summary should not render raw script HTML");
+assert(!maliciousReadinessHtml.includes("<iframe src=javascript:alert(4)>"), "reveal readiness details should not render raw iframe HTML");
+assert(maliciousReadinessHtml.includes("&lt;script&gt;alert(4)&lt;/script&gt;"), "reveal readiness scripts should be escaped as visible text");
 vm.runInContext("customCaseLibrary = [];", context);
 
 vm.runInContext("state = defaultState('C-03', 'exam'); renderCaseList(getCase('C-03')); renderCaseBrief(getCase('C-03')); renderTradeForm(getCase('C-03')); renderLearning(getCase('C-03')); renderCoursePath(); renderProfile();", context);
