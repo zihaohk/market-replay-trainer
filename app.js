@@ -1756,90 +1756,19 @@ function csvQualitySummary(status, warningCount) {
 
 function renderImportQualityReport(report) {
   if (!elements.importQualityPanel) return;
-  if (!report) {
-    elements.importQualityPanel.innerHTML = "";
-    return;
-  }
-  const warnings = report.warnings.length
-    ? report.warnings.map((item) => `
-      <li>
-        <strong>${escapeHtml(item.title)}</strong>
-        <span>${escapeHtml(item.symbol ? `${item.symbol}：${item.detail}` : item.detail)}</span>
-      </li>
-    `).join("")
-    : "<li><strong>未发现明显问题</strong><span>仍需确认复权、分红和数据源口径。</span></li>";
-  const symbolRows = report.symbolReports.map((item) => `
-    <div class="quality-symbol-row">
-      <strong>${escapeHtml(item.symbol)}</strong>
-      <span>${item.rowCount} 行</span>
-      <span>${escapeHtml(item.firstDate)} 至 ${escapeHtml(item.lastDate)}</span>
-      <span>${formatPercent(item.totalReturnPct)}</span>
-      <span>最大回撤 ${formatPercent(item.maxDrawdownPct)}</span>
-    </div>
-  `).join("");
-  elements.importQualityPanel.innerHTML = `
-    <div class="quality-card is-${report.status}">
-      <div class="quality-card-header">
-        <strong>CSV 数据体检</strong>
-        <span>${escapeHtml(csvQualityStatusLabel(report.status))}</span>
-      </div>
-      <p>${escapeHtml(report.summary)}</p>
-      <div class="quality-grid">
-        <span>${report.symbolCount} 个标的</span>
-        <span>${report.totalRows} 行行情</span>
-        <span>${escapeHtml(report.firstDate)} 至 ${escapeHtml(report.lastDate)}</span>
-      </div>
-      <ul class="quality-warning-list">${warnings}</ul>
-      <div class="quality-symbol-grid">${symbolRows}</div>
-    </div>
-  `;
+  elements.importQualityPanel.innerHTML = MarketReplayImportExportUI.renderImportQualityReport(report, {
+    escapeHtml,
+    formatPercent,
+    statusLabel: csvQualityStatusLabel,
+  });
 }
 
 function renderScenarioPackageQualityReport(report, errorMessage = "") {
   if (!elements.importPackageQualityPanel) return;
-  if (!report) {
-    elements.importPackageQualityPanel.innerHTML = errorMessage
-      ? `<div class="quality-card is-danger"><div class="quality-card-header"><strong>案例包体检失败</strong><span>需修正</span></div><p>${escapeHtml(errorMessage)}</p></div>`
-      : "";
-    return;
-  }
-  const sourceCount = report.importedCase.sourcePack.items.filter((item) => item.url).length;
-  const warnings = report.warnings.length
-    ? report.warnings.slice(0, 8).map((item) => `
-      <li>
-        <strong>${escapeHtml(item.title || item.level || "注意")}</strong>
-        <span>${escapeHtml(item.symbol ? `${item.symbol}：${item.detail || item.message}` : item.detail || item.message || "")}</span>
-      </li>
-    `).join("")
-    : "<li><strong>未发现明显问题</strong><span>仍需复盘时核对一手来源、复权口径和新闻摘要。</span></li>";
-  elements.importPackageQualityPanel.innerHTML = `
-    <div class="quality-card is-${report.status}">
-      <div class="quality-card-header">
-        <strong>案例包体检</strong>
-        <span>${escapeHtml(csvQualityStatusLabel(report.status))}</span>
-      </div>
-      <p>${escapeHtml(report.summary)}</p>
-      <div class="quality-grid">
-        <span>${report.importedCase.assets.length} 个标的</span>
-        <span>${report.importedCase.news.length} 条新闻</span>
-        <span>${report.importedCase.scheduledEvents.length} 个事件日</span>
-        <span>${sourceCount} 条来源</span>
-        <span>完整度 ${report.readiness.score}/100</span>
-      </div>
-      <ul class="quality-warning-list">${warnings}</ul>
-      <div class="quality-readiness-grid">
-        ${report.readiness.rows.map((item) => `
-          <section class="quality-readiness-row is-${item.level}">
-            <div>
-              <strong>${escapeHtml(item.label)}</strong>
-              <p>${escapeHtml(item.detail)}</p>
-            </div>
-            <span>${item.score}/100</span>
-          </section>
-        `).join("")}
-      </div>
-    </div>
-  `;
+  elements.importPackageQualityPanel.innerHTML = MarketReplayImportExportUI.renderScenarioPackageQualityReport(report, errorMessage, {
+    escapeHtml,
+    statusLabel: csvQualityStatusLabel,
+  });
 }
 
 function csvQualityStatusLabel(status) {
@@ -7810,13 +7739,7 @@ function importScenarioPackageBundle(bundle, sourceName = "", options = {}) {
 }
 
 function caseLibraryImportSummary(summary, lastCaseId) {
-  const skippedText = summary.skipped.length
-    ? `跳过重复 ${summary.skipped.length} 个。`
-    : "";
-  const failedText = summary.failed.length
-    ? `失败 ${summary.failed.length} 个：${summary.failed.slice(0, 3).map((item) => `${item.fileName}（${item.message}）`).join("；")}。`
-    : "";
-  return `已导入案例库 ${summary.imported.length}/${summary.total} 个案例，当前切到 ${lastCaseId}。${skippedText}${failedText}`;
+  return MarketReplayImportExportUI.caseLibraryImportSummary(summary, lastCaseId);
 }
 
 function readScenarioPackageFile(file, handlers = {}) {
