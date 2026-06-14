@@ -86,6 +86,10 @@ const CHECKS = [
     command: ["node", "--check", "ui/training-plan.js"],
   },
   {
+    name: "case list UI syntax",
+    command: ["node", "--check", "ui/case-list.js"],
+  },
+  {
     name: "profile insights UI syntax",
     command: ["node", "--check", "ui/profile-insights.js"],
   },
@@ -168,6 +172,10 @@ const CHECKS = [
   {
     name: "training plan UI smoke",
     command: ["node", "tests/ui-training-plan-smoke.js"],
+  },
+  {
+    name: "case list UI smoke",
+    command: ["node", "tests/ui-case-list-smoke.js"],
   },
   {
     name: "profile insights UI smoke",

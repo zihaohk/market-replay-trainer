@@ -2015,38 +2015,29 @@ function renderCaseList(selectedCase) {
   const cases = allCases();
   const recommendedCase = findNextRecommendedCase();
   elements.caseCountLabel.textContent = `${cases.length} 个训练包 · 推荐 ${recommendedCase ? displayCaseId(recommendedCase) : "暂无"}`;
-  elements.caseList.innerHTML = cases
+  const caseRows = cases
     .map((item) => {
-      const selected = item.id === selectedCase.id ? " is-selected" : "";
       const status = getCasePathStatus(item);
       const mastery = buildCaseMastery(item.id);
-      const locked = status.unlocked ? "" : " is-locked";
-      const recommended = recommendedCase?.id === item.id ? `<span class="tag important">推荐下一关</span>` : "";
-      const dataLabel = displayCaseKindLabel(item);
-      const title = displayCaseTitle(item);
-      const brief = displayCaseBrief(item);
-      const idLabel = displayCaseId(item);
-      const safeCaseId = escapeHtml(item.id);
-      const deleteButton = item.kind === "custom"
-        ? `<button class="mini-danger-button" type="button" data-delete-case-id="${safeCaseId}">删除</button>`
-        : "";
-      return `
-        <div class="case-card${selected}${locked}" data-case-id="${safeCaseId}">
-          <button class="case-main-button" type="button" data-case-id="${safeCaseId}" ${status.unlocked ? "" : "disabled"}>
-            <strong>${escapeHtml(idLabel)} · ${escapeHtml(title)}</strong>
-            <span>${escapeHtml(item.level)} · ${escapeHtml(dataLabel)} · ${escapeHtml(status.label)}</span>
-            <p>${escapeHtml(brief)}</p>
-            <div class="case-mastery-line is-${escapeHtml(mastery.level)}">
-              <span>${escapeHtml(mastery.label)}</span>
-              <small>${escapeHtml(mastery.detail)}</small>
-            </div>
-            <div class="course-meta">${recommended}<span class="tag ${mastery.level === "mastered" ? "real" : mastery.level === "needs-work" ? "important" : ""}">${escapeHtml(mastery.label)}</span><span class="tag ${status.unlocked ? "" : "locked"}">${escapeHtml(status.reason)}</span></div>
-          </button>
-          ${deleteButton}
-        </div>
-      `;
-    })
-    .join("");
+      return {
+        id: item.id,
+        idLabel: displayCaseId(item),
+        title: displayCaseTitle(item),
+        brief: displayCaseBrief(item),
+        level: item.level,
+        dataLabel: displayCaseKindLabel(item),
+        statusLabel: status.label,
+        statusReason: status.reason,
+        masteryLevel: mastery.level,
+        masteryLabel: mastery.label,
+        masteryDetail: mastery.detail,
+        selected: item.id === selectedCase.id,
+        unlocked: status.unlocked,
+        recommended: recommendedCase?.id === item.id,
+        custom: item.kind === "custom",
+      };
+    });
+  elements.caseList.innerHTML = MarketReplayCaseListUI.renderCaseList(caseRows, { escapeHtml });
   renderCaseLibraryCoverage(cases);
 }
 
@@ -2054,39 +2045,11 @@ function renderCaseLibraryCoverage(cases = allCases()) {
   if (!elements.caseLibraryCoverage || !elements.caseLibraryCoverageLabel) return;
   const report = buildCaseLibraryCoverageReport(cases);
   elements.caseLibraryCoverageLabel.textContent = `${report.score}/100 · ${caseLibraryCoverageLevelLabel(report.level)}`;
-  if (currentModePolicy().hideCaseMeta && !state.revealed) {
-    elements.caseLibraryCoverage.innerHTML = `
-      <section class="library-coverage-card is-muted">
-        <strong>考试模式隐藏覆盖详情</strong>
-        <p>当前案例库共 ${cases.length} 个训练包。具体主题、行业和补课建议会在复盘后显示，避免影响本轮盲测。</p>
-      </section>
-    `;
-    return;
-  }
-  const weakRows = report.rows.filter((row) => row.level !== "good");
-  elements.caseLibraryCoverage.innerHTML = `
-    <section class="library-coverage-card is-${escapeHtml(report.level)}">
-      <div class="library-coverage-head">
-        <strong>${escapeHtml(report.summary)}</strong>
-        <span>${report.covered}/${report.totalDimensions} 类达标</span>
-      </div>
-      <div class="library-coverage-grid">
-        ${report.rows.map((row) => `
-          <article class="library-coverage-row is-${escapeHtml(row.level)}">
-            <div>
-              <strong>${escapeHtml(row.label)}</strong>
-              <span>${row.count}/${row.target} 个案例</span>
-            </div>
-            <small>${row.score}/100</small>
-          </article>
-        `).join("")}
-      </div>
-      <div class="library-coverage-next">
-        <strong>${weakRows.length ? "优先补库" : "下一步"}</strong>
-        <p>${escapeHtml(weakRows[0]?.action || "覆盖已经比较均衡。下一步把匿名形态逐步替换成核对过的真实历史案例。")}</p>
-      </div>
-    </section>
-  `;
+  elements.caseLibraryCoverage.innerHTML = MarketReplayCaseListUI.renderCaseLibraryCoverage(report, {
+    escapeHtml,
+    hideDetails: currentModePolicy().hideCaseMeta && !state.revealed,
+    casesLength: cases.length,
+  });
 }
 
 function buildCaseLibraryCoverageReport(cases = allCases()) {
@@ -2135,63 +2098,46 @@ function renderCaseBrief(selectedCase) {
     ? `${selectedCase.realPeriod}。${selectedCase.dataQuality}`
     : displayCaseBrief(selectedCase);
   elements.caseTags.innerHTML = [
-    ...displayCaseTags(selectedCase).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`),
-    ...(state.activeRemediation ? [`<span class="tag important">补练中</span>`] : []),
-    `<span class="tag ${selectedCase.kind === "synthetic" ? "important" : "real"}">${escapeHtml(displayCaseKindLabel(selectedCase))}</span>`,
+    MarketReplayCaseListUI.renderCaseTags(displayCaseTags(selectedCase), {
+      escapeHtml,
+      activeRemediation: Boolean(state.activeRemediation),
+      kindClass: selectedCase.kind === "synthetic" ? "important" : "real",
+      kindLabel: displayCaseKindLabel(selectedCase),
+    }),
   ].join("");
 }
 
 function renderWatchlist(selectedCase) {
   elements.assetCountLabel.textContent = `${selectedCase.assets.length} 个`;
-  elements.watchlist.innerHTML = selectedCase.assets
+  const rows = selectedCase.assets
     .map((item) => {
       const price = getPrice(item.maskedSymbol);
       const previous = getPreviousPrice(item.maskedSymbol);
       const change = previous ? ((price - previous) / previous) * 100 : 0;
-      const selected = item.maskedSymbol === state.selectedSymbol ? " is-selected" : "";
-      const displaySymbol = displayAssetSymbol(item);
-      return `
-        <button class="watch-row${selected}" type="button" data-symbol="${escapeHtml(item.maskedSymbol)}">
-          <span>
-            <strong>${escapeHtml(displaySymbol)}</strong>
-            <span class="symbol-name">${escapeHtml(displayAssetName(item))}</span>
-          </span>
-          <span class="row-price">
-            <strong>${formatCurrency(price)}</strong>
-            <span class="change ${change >= 0 ? "positive" : "negative"}">${formatPercent(change)}</span>
-          </span>
-        </button>
-      `;
-    })
-    .join("");
+      return {
+        symbol: item.maskedSymbol,
+        displaySymbol: displayAssetSymbol(item),
+        displayName: displayAssetName(item),
+        price,
+        changePct: change,
+        selected: item.maskedSymbol === state.selectedSymbol,
+      };
+    });
+  elements.watchlist.innerHTML = MarketReplayCaseListUI.renderWatchlist(rows, {
+    escapeHtml,
+    formatCurrency,
+    formatPercent,
+  });
 }
 
 function renderRelativeStrengthPanel(selectedCase) {
   const panel = buildRelativeStrengthPanel(selectedCase);
-  elements.relativeStrengthPanel.innerHTML = `
-    <div class="relative-summary is-${escapeHtml(panel.regime.level)}">
-      <strong>${escapeHtml(panel.regime.title)}</strong>
-      <p>${escapeHtml(panel.regime.detail)}</p>
-    </div>
-    <div class="relative-table">
-      ${panel.rows.map((row) => `
-        <button class="relative-row${row.symbol === state.selectedSymbol ? " is-selected" : ""}" type="button" data-symbol="${escapeHtml(row.symbol)}">
-          <span>
-            <strong>${escapeHtml(row.displaySymbol)}</strong>
-            <small>${escapeHtml(row.roleLabel)}</small>
-          </span>
-          <span>
-            <strong class="${row.totalReturnPct >= 0 ? "positive" : "negative"}">${formatPercent(row.totalReturnPct)}</strong>
-            <small>相对 ${formatPercent(row.relativeReturnPct)}</small>
-          </span>
-          <span>
-            <strong>${formatPlainPercent(row.recentVolatilityPct)}</strong>
-            <small>近 ${row.lookbackDays} 日波动</small>
-          </span>
-        </button>
-      `).join("")}
-    </div>
-  `;
+  elements.relativeStrengthPanel.innerHTML = MarketReplayCaseListUI.renderRelativeStrengthPanel(panel, {
+    escapeHtml,
+    formatPercent,
+    formatPlainPercent,
+    selectedSymbol: state.selectedSymbol,
+  });
 }
 
 function buildRelativeStrengthPanel(selectedCase = getCase()) {
@@ -4613,7 +4559,7 @@ function renderLearning(selectedCase) {
     elements.lessonPanel.innerHTML = `
       <section class="lesson-section lesson-gate is-passed">
         <strong>考试模式已解锁交易</strong>
-        <p>${gate.message}</p>
+        <p>${escapeHtml(gate.message)}</p>
         <div class="course-meta">
           <span class="tag real">强盲测</span>
           <span class="tag">隐藏课程主题</span>
@@ -4636,45 +4582,45 @@ function renderLearning(selectedCase) {
   elements.lessonPanel.innerHTML = `
     <section class="lesson-section lesson-gate ${isCorrect ? "is-passed" : "is-blocked"}">
       <strong>${isCorrect ? "已解锁交易" : "先过课前检查"}</strong>
-      <p>${gate.message}</p>
+      <p>${escapeHtml(gate.message)}</p>
       <div class="course-meta">
         <span class="tag">${gate.attempts} 次作答</span>
         <span class="tag ${gate.passed ? "real" : "important"}">${gate.passed ? "已通过" : "未通过"}</span>
       </div>
     </section>
     <section class="lesson-section">
-      <strong>${lesson.title}</strong>
-      <p>${lesson.concept}</p>
+      <strong>${escapeHtml(lesson.title)}</strong>
+      <p>${escapeHtml(lesson.concept)}</p>
     </section>
     <section class="lesson-section">
       <strong>本关规则</strong>
-      <ul class="lesson-mini-list">${lesson.rules.map((item) => `<li>${item}</li>`).join("")}</ul>
+      <ul class="lesson-mini-list">${lesson.rules.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
     </section>
     <section class="lesson-section">
       <strong>术语卡</strong>
       <div class="term-grid">
         ${lesson.terms.map((item) => `
           <article class="term-card">
-            <strong>${item.name}</strong>
-            <p>${item.description}</p>
+            <strong>${escapeHtml(item.name)}</strong>
+            <p>${escapeHtml(item.description)}</p>
           </article>
         `).join("")}
       </div>
     </section>
     <section class="lesson-section">
       <strong>检查题</strong>
-      <p>${lesson.quiz.question}</p>
+      <p>${escapeHtml(lesson.quiz.question)}</p>
       <div class="quiz-options" role="group" aria-label="课程检查题">
         ${lesson.quiz.options.map((option, index) => `
           <button class="quiz-option ${answered && answer.selected === index ? "is-selected" : ""} ${answered && index === lesson.quiz.answer ? "is-correct" : ""}" type="button" data-quiz-answer="${index}">
-            ${option}
+            ${escapeHtml(option)}
           </button>
         `).join("")}
       </div>
       ${answered ? `
         <div class="quiz-feedback ${isCorrect ? "is-correct" : "is-wrong"}">
           <strong>${isCorrect ? "答对了" : "还需要重看"}</strong>
-          <p>${lesson.quiz.explanation}</p>
+          <p>${escapeHtml(lesson.quiz.explanation)}</p>
         </div>
       ` : `<p class="muted">先选一个答案，系统会告诉你为什么。</p>`}
     </section>

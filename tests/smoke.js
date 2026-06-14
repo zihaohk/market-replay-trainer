@@ -12,6 +12,7 @@ const importersPath = path.join(__dirname, "..", "core", "importers.js");
 const runtimePath = path.join(__dirname, "..", "core", "runtime.js");
 const sessionStatePath = path.join(__dirname, "..", "state", "session.js");
 const trainingPlanUiPath = path.join(__dirname, "..", "ui", "training-plan.js");
+const caseListUiPath = path.join(__dirname, "..", "ui", "case-list.js");
 const profileInsightsUiPath = path.join(__dirname, "..", "ui", "profile-insights.js");
 const reviewSummaryUiPath = path.join(__dirname, "..", "ui", "review-summary.js");
 const eventsUiPath = path.join(__dirname, "..", "ui", "events.js");
@@ -27,6 +28,7 @@ const importersSource = fs.readFileSync(importersPath, "utf8");
 const runtimeSource = fs.readFileSync(runtimePath, "utf8");
 const sessionStateSource = fs.readFileSync(sessionStatePath, "utf8");
 const trainingPlanUiSource = fs.readFileSync(trainingPlanUiPath, "utf8");
+const caseListUiSource = fs.readFileSync(caseListUiPath, "utf8");
 const profileInsightsUiSource = fs.readFileSync(profileInsightsUiPath, "utf8");
 const reviewSummaryUiSource = fs.readFileSync(reviewSummaryUiPath, "utf8");
 const eventsUiSource = fs.readFileSync(eventsUiPath, "utf8");
@@ -134,6 +136,7 @@ vm.runInContext(importersSource, context, { filename: "core/importers.js" });
 vm.runInContext(runtimeSource, context, { filename: "core/runtime.js" });
 vm.runInContext(sessionStateSource, context, { filename: "state/session.js" });
 vm.runInContext(trainingPlanUiSource, context, { filename: "ui/training-plan.js" });
+vm.runInContext(caseListUiSource, context, { filename: "ui/case-list.js" });
 vm.runInContext(profileInsightsUiSource, context, { filename: "ui/profile-insights.js" });
 vm.runInContext(reviewSummaryUiSource, context, { filename: "ui/review-summary.js" });
 vm.runInContext(eventsUiSource, context, { filename: "ui/events.js" });
@@ -183,6 +186,18 @@ context.maliciousPackageText = JSON.stringify({
     ],
   }],
   news: [{ day: 0, title: "Unsafe <img src=x>", category: "important" }],
+  learning: {
+    title: "Lesson <img src=x onerror=alert(2)>",
+    concept: "Concept <script>alert(2)</script>",
+    rules: ["Rule <iframe src=javascript:alert(2)>"],
+    terms: [{ name: "Term <svg onload=alert(2)>", description: "Desc <img src=x onerror=alert(2)>" }],
+    quiz: {
+      question: "Question <script>alert(2)</script>",
+      options: ["Option <b>bad</b>", "Safe option"],
+      answer: 1,
+      explanation: "Explanation <img src=x onerror=alert(2)>",
+    },
+  },
   sourcePack: { items: [{ title: "Unsafe link", url: "javascript:alert(1)", reason: "block" }] },
 });
 const escapedMaliciousUi = vm.runInContext(`
@@ -193,14 +208,19 @@ const escapedMaliciousUi = vm.runInContext(`
   renderCaseBrief(maliciousCase);
   renderWatchlist(maliciousCase);
   renderRelativeStrengthPanel(maliciousCase);
-  elements.caseList.innerHTML + elements.caseTags.innerHTML + elements.watchlist.innerHTML + elements.relativeStrengthPanel.innerHTML;
+  renderLearning(maliciousCase);
+  elements.caseList.innerHTML + elements.caseTags.innerHTML + elements.watchlist.innerHTML + elements.relativeStrengthPanel.innerHTML + elements.lessonPanel.innerHTML;
 `, context);
 assert(!escapedMaliciousUi.includes("<img src=x onerror=alert(1)>"), "imported package title should not render raw image HTML");
 assert(!escapedMaliciousUi.includes("<script>alert(1)</script>"), "imported package brief should not render raw script HTML");
 assert(!escapedMaliciousUi.includes("<svg onload=alert(1)>"), "imported package asset name should not render raw SVG HTML");
+assert(!escapedMaliciousUi.includes("<script>alert(2)</script>"), "imported package lesson should not render raw script HTML");
+assert(!escapedMaliciousUi.includes("<iframe src=javascript:alert(2)>"), "imported package lesson rules should not render raw iframe HTML");
+assert(!escapedMaliciousUi.includes("<svg onload=alert(2)>"), "imported package lesson terms should not render raw SVG HTML");
 assert(!escapedMaliciousUi.includes('data-symbol="BAD" onclick="alert(1)"'), "imported package symbols should not break out of data attributes");
 assert(escapedMaliciousUi.includes("&lt;img src=x onerror=alert(1)&gt;"), "imported package title should be escaped as visible text");
 assert(escapedMaliciousUi.includes("&lt;svg onload=alert(1)&gt;"), "imported package asset name should be escaped as visible text");
+assert(escapedMaliciousUi.includes("&lt;script&gt;alert(2)&lt;/script&gt;"), "imported package lesson scripts should be escaped as visible text");
 vm.runInContext("customCaseLibrary = [];", context);
 
 vm.runInContext("state = defaultState('C-03', 'exam'); renderCaseList(getCase('C-03')); renderCaseBrief(getCase('C-03')); renderTradeForm(getCase('C-03')); renderLearning(getCase('C-03')); renderCoursePath(); renderProfile();", context);
