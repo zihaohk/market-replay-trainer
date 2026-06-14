@@ -6334,6 +6334,10 @@ function renderReviewScoreGrid(review) {
   });
 }
 
+function renderPriorityFixes(review) {
+  return MarketReplayReviewSummaryUI.renderPriorityFixes(review, { escapeHtml });
+}
+
 function renderReviewPlanSections(review) {
   return MarketReplayReviewSummaryUI.renderReviewPlanSections(review, {
     escapeHtml,
@@ -6449,6 +6453,7 @@ function renderReview(selectedCase) {
       <button class="mini-button" type="button" data-export-review>导出本轮复盘 Markdown</button>
       <span>适合长期保存、复习或分享给别人看。</span>
     </div>
+    ${renderPriorityFixes(review)}
     ${renderReviewEvidenceIntro(review)}
     ${renderReviewScoreGrid(review)}
     ${renderRevealReadinessCard(review.revealReadiness)}

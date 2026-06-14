@@ -2336,6 +2336,74 @@ tbody tr:last-child td {
   font-size: 12px;
 }
 
+.priority-fixes {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #c8ddd9;
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  background: #f8fbfa;
+}
+
+.priority-fixes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.priority-fixes-head strong {
+  font-size: 15px;
+}
+
+.priority-fixes-head span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.priority-fix-list {
+  display: grid;
+  gap: 8px;
+}
+
+.priority-fix-card {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.priority-fix-card.is-danger {
+  border-color: #efb5ae;
+  background: var(--danger-soft);
+}
+
+.priority-fix-card.is-warn {
+  border-color: #edd09a;
+  background: var(--warning-soft);
+}
+
+.priority-fix-card.is-good {
+  border-color: #b7dec1;
+  background: var(--positive-soft);
+}
+
+.priority-fix-rank {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
 .reveal-readiness-card {
   display: grid;
   gap: 12px;

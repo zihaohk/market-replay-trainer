@@ -32,6 +32,67 @@
   `;
   }
 
+  function renderPriorityFixes(review, options = {}) {
+    const helpers = buildHelpers(options);
+    const fixes = buildPriorityFixes(review || {});
+    return `
+    <section class="priority-fixes">
+      <div class="priority-fixes-head">
+        <strong>最该先改的 3 件事</strong>
+        <span>先处理这些，再看完整指标</span>
+      </div>
+      <div class="priority-fix-list">
+        ${fixes.map((item, index) => `
+          <article class="priority-fix-card is-${helpers.escapeHtml(item.level)}">
+            <span class="priority-fix-rank">${index + 1}</span>
+            <div>
+              <strong>${helpers.escapeHtml(item.title)}</strong>
+              <p>${helpers.escapeHtml(item.reason)}</p>
+              <p><b>下一步：</b>${helpers.escapeHtml(item.action)}</p>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+  `;
+  }
+
+  function buildPriorityFixes(review) {
+    const rootRows = (review.rootCauseMatrix?.items || [])
+      .filter((item) => item && item.level !== "good")
+      .slice(0, 3)
+      .map((item) => ({
+        level: item.level || "warn",
+        title: item.label || "待改进根因",
+        reason: item.drivers?.[0]?.evidence || item.focus || `严重度 ${Number(item.severityScore) || 0}/100。`,
+        action: item.nextAction || "下一轮把这项写进训练合约。",
+      }));
+    if (rootRows.length) return rootRows;
+
+    const diagnostics = (review.diagnostics || []).slice(0, 3).map((item) => ({
+      level: item.severity || "warn",
+      title: item.title || "高级诊断提醒",
+      reason: item.evidence || "本轮触发了系统诊断提醒。",
+      action: item.lesson || "下一轮先降低仓位并写清楚失效条件。",
+    }));
+    if (diagnostics.length) return diagnostics;
+
+    const flags = (review.flags || []).slice(0, 3).map((flag) => ({
+      level: "warn",
+      title: flag,
+      reason: "本轮出现了这类纪律问题。",
+      action: "下一轮开始前把它写进训练合约和复盘硬规则。",
+    }));
+    if (flags.length) return flags;
+
+    return [{
+      level: "good",
+      title: "本轮没有明显红色问题",
+      reason: "这只说明本轮没有触发系统能识别的典型错误，样本仍然很小。",
+      action: "继续按今日计划训练，并至少保存一条复盘反思。",
+    }];
+  }
+
   function renderReviewPlanSections(review, options = {}) {
     const helpers = buildHelpers(options);
     const sections = [
@@ -1013,6 +1074,7 @@
   return {
     renderReviewEvidenceIntro,
     renderReviewScoreGrid,
+    renderPriorityFixes,
     renderReviewPlanSections,
     renderBlindIntegritySection,
     renderRiskCoolingSection,

@@ -125,8 +125,10 @@ export async function runBrowserSmoke(options = {}) {
     await page.waitForFunction(() => {
       const label = document.querySelector("#reviewStateLabel")?.textContent || "";
       const content = document.querySelector("#reviewContent")?.textContent || "";
-      return label.includes("已揭晓") && content.includes("复盘资料包") && content.includes("盲测完整性");
+      return label.includes("已揭晓") && content.includes("最该先改的 3 件事") && content.includes("复盘资料包") && content.includes("盲测完整性");
     }, null, { timeout: 10_000 });
+    const reviewTextOrder = await page.locator("#reviewContent").textContent();
+    assert(reviewTextOrder.indexOf("最该先改的 3 件事") < reviewTextOrder.indexOf("复盘资料包"), "复盘优先改进项没有排在资料包细节前面。");
     await page.screenshot({ path: reviewScreenshotPath, fullPage: true });
     const reviewDownload = await downloadFromClick(page, "[data-export-review]");
     await reviewDownload.saveAs(reviewDownloadPath);

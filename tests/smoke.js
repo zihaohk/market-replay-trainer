@@ -669,6 +669,13 @@ assert(review.evidence.timeline.every((item) => item.moves.every((move) => Numbe
 assert(review.rootCauseMatrix && review.rootCauseMatrix.items.length >= 6, "review should include a root-cause matrix");
 assert(review.rootCauseMatrix.items[0].severityScore >= review.rootCauseMatrix.items[review.rootCauseMatrix.items.length - 1].severityScore, "root-cause matrix should rank strongest causes first");
 assert(review.rootCauseMatrix.primary && review.rootCauseMatrix.summary.includes(review.rootCauseMatrix.primary.label), "root-cause matrix should expose a primary cause and summary");
+const reviewPriorityHtml = vm.runInContext(`
+  state.revealed = true;
+  renderReview(getCase('A-01'));
+  elements.reviewContent.innerHTML;
+`, context);
+assert(reviewPriorityHtml.includes("最该先改的 3 件事"), "review page should show priority fixes before detailed metrics");
+assert(reviewPriorityHtml.indexOf("最该先改的 3 件事") < reviewPriorityHtml.indexOf("数据来源核对"), "priority fixes should appear before source evidence details");
 const earlyReadiness = vm.runInContext("buildRevealReadiness(getCase('A-01'))", context);
 assert(earlyReadiness.blocking && earlyReadiness.failCount >= 1, "early reveal readiness should require an explicit confirmation");
 assert(earlyReadiness.items.some((item) => item.title === "训练进度" && item.status !== "pass"), "reveal readiness should check training progress");

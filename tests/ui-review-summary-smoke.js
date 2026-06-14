@@ -47,7 +47,24 @@ const review = {
   positionTriggerReview: { level: "warn", score: 73 },
   checkpointReview: { level: "good", score: 88 },
   revealReadiness: { level: "good", score: 96 },
-  rootCauseMatrix: { primary: { level: "danger", label: "仓位风控" } },
+  rootCauseMatrix: {
+    primary: { level: "danger", label: "仓位风控" },
+    items: [{
+      level: "danger",
+      label: "仓位风控",
+      focus: "仓位过大",
+      severityScore: 88,
+      drivers: [{ evidence: "最大仓位超过限制。", action: "先降仓位" }],
+      nextAction: "下一轮单标的仓位不超过 10%。",
+    }, {
+      level: "warn",
+      label: "执行纪律",
+      focus: "合约执行",
+      severityScore: 62,
+      drivers: [{ evidence: "训练合约没有完全执行。", action: "先保存合约" }],
+      nextAction: "下单前先检查训练合约。",
+    }],
+  },
   lessonGate: { passed: true, attempts: 2 },
   contractStatus: {
     passed: false,
@@ -168,6 +185,12 @@ assert(scoreHtml.includes("首要根因"));
 assert(scoreHtml.includes("仓位风控"));
 assert(scoreHtml.includes("课程理解"));
 assert(scoreHtml.includes("2 次通过"));
+
+const priorityFixHtml = ui.renderPriorityFixes(review);
+assert(priorityFixHtml.includes("最该先改的 3 件事"));
+assert(priorityFixHtml.includes("仓位风控"));
+assert(priorityFixHtml.includes("最大仓位超过限制。"));
+assert(priorityFixHtml.includes("下一轮单标的仓位不超过 10%。"));
 
 const planHtml = ui.renderReviewPlanSections(review, {
   missionStatusLabel: (status) => ({ pass: "通过", warn: "提醒", fail: "失败" })[status] || status,
