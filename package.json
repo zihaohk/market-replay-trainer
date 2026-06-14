@@ -1,0 +1,26 @@
+{
+  "name": "market-replay-trainer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local US stock historical blind replay trainer for disciplined beginner practice.",
+  "type": "commonjs",
+  "scripts": {
+    "check": "node tools/check-all.mjs",
+    "test": "node tools/check-all.mjs",
+    "browser:smoke": "node tools/browser-smoke.mjs",
+    "build:case": "node tools/build-case-package.mjs",
+    "validate:case": "node tools/validate-case-package.mjs",
+    "build:library": "node tools/build-case-library.mjs",
+    "bundle:library": "node tools/bundle-case-library.mjs",
+    "audit:coverage": "node tools/audit-case-coverage.mjs",
+    "check:starter": "node tools/build-case-library.mjs --manifest cases/starter-classic-library.json --dry-run --strict && node tools/audit-case-coverage.mjs --manifest cases/starter-classic-library.json --strict",
+    "build:starter": "node tools/build-case-library.mjs --manifest cases/starter-classic-library.json --strict && node tools/bundle-case-library.mjs --manifest cases/starter-classic-library.json --dir packages/starter-classic --out packages/case-c-bundle.json --strict && node tools/sync-starter-bundle.mjs",
+    "scaffold:case": "node tools/scaffold-case-config.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "playwright": "^1.60.0"
+  }
+}

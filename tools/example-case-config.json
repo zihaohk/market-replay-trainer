@@ -1,0 +1,126 @@
+{
+  "title": "Example package: SPY and QQQ replay",
+  "maskedTitle": "匿名宽基与成长股对比",
+  "maskedBrief": "示例配置：用 Yahoo 日线生成 SPY/QQQ 回放包，再补充新闻、课程、任务和来源。",
+  "revealTitle": "Example SPY/QQQ replay package",
+  "start": "2020-02-18",
+  "end": "2020-04-29",
+  "tags": ["示例", "Yahoo OHLCV", "多标的"],
+  "assets": [
+    {
+      "symbol": "SPY",
+      "maskedSymbol": "PKG-A",
+      "maskedName": "匿名宽基 ETF",
+      "type": "etf",
+      "sector": "market"
+    },
+    {
+      "symbol": "QQQ",
+      "maskedSymbol": "PKG-B",
+      "maskedName": "匿名成长 ETF",
+      "type": "etf",
+      "sector": "growth"
+    }
+  ],
+  "news": [
+    {
+      "date": "2020-02-18",
+      "title": "市场接近历史高位，但外部不确定性开始升高。",
+      "category": "important"
+    },
+    {
+      "date": "2020-02-24",
+      "title": "主要指数出现连续快速下跌，波动和成交量明显放大。",
+      "category": "important"
+    },
+    {
+      "date": "2020-03-24",
+      "title": "政策支持和流动性措施持续推出，市场从极端恐慌中反弹。",
+      "category": "lagging"
+    }
+  ],
+  "scheduledEvents": [
+    {
+      "date": "2020-02-24",
+      "title": "高波动风险窗口",
+      "type": "volatility",
+      "riskLevel": "danger",
+      "detail": "限制追涨杀跌，先看回撤预算和现金底线。"
+    }
+  ],
+  "lessons": [
+    "宽基 ETF 可以降低单公司风险，但不能消除系统性风险。",
+    "成长资产在流动性压力中可能比宽基波动更大。",
+    "暴跌阶段第一目标是活下来，不是猜最低点。"
+  ],
+  "learning": {
+    "title": "系统性下跌中的 ETF 纪律",
+    "concept": "系统性风险会同时压低宽基和成长资产，新手要先控制仓位、现金和交易频率。",
+    "rules": [
+      "第一笔只能是试探仓，不把第一段急跌当底部确认。",
+      "每次买入前写最大可接受亏损和失效条件。",
+      "至少记录一次主动观望，不把不交易当成错过机会。"
+    ],
+    "terms": [
+      {
+        "name": "系统性风险",
+        "description": "整个市场一起下跌的风险，ETF 也会承受。"
+      },
+      {
+        "name": "试探仓",
+        "description": "用小仓位验证判断，保留后续调整空间。"
+      },
+      {
+        "name": "现金缓冲",
+        "description": "保留现金是为了防止被迫卖出和等待更清晰机会。"
+      }
+    ],
+    "quiz": {
+      "question": "市场连续快速下跌时，ETF 新手最应该先做什么？",
+      "options": [
+        "控制仓位和现金，分批验证判断",
+        "一次满仓，因为 ETF 一定安全",
+        "只看最后是否反弹"
+      ],
+      "answer": 0,
+      "explanation": "ETF 分散的是公司风险，不是市场风险。急跌中先控制节奏。"
+    }
+  },
+  "mission": {
+    "focus": "系统性下跌 ETF 纪律",
+    "objective": "训练在系统性下跌中控制仓位、记录观望、区分宽基和成长资产风险。",
+    "checklist": [
+      "保存训练合约和最大回撤预算。",
+      "至少完成一次主动观望。",
+      "买入前比较两个 ETF 的相对强弱。"
+    ],
+    "passCriteria": [
+      "至少 1 次主动观望。",
+      "最大单标的仓位不超过 45%。",
+      "至少保存 1 条新闻判断。"
+    ],
+    "rules": {
+      "minHolds": 1,
+      "maxTrades": 5,
+      "maxTurnoverPct": 70,
+      "maxConcentrationPct": 45,
+      "minNewsJudgments": 1,
+      "calmOnly": true
+    },
+    "trap": "最大陷阱是看到跌很多就认为 ETF 必然安全。",
+    "drill": "重新训练同一案例，第一笔只允许小仓试探，并至少观望一次。"
+  },
+  "sourcePack": {
+    "summary": "示例来源。正式案例请换成对应事件的一手资料。",
+    "items": [
+      {
+        "title": "Federal Reserve 2020 policy actions",
+        "publisher": "Federal Reserve",
+        "date": "2020",
+        "kind": "政策资料",
+        "url": "https://www.federalreserve.gov/",
+        "reason": "复盘时核对政策背景。"
+      }
+    ]
+  }
+}
