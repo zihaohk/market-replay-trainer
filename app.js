@@ -6825,68 +6825,19 @@ function drawMovingAverage(ctx, points, windowSize, xFor, yFor, color) {
 function renderRiskDashboard(selectedCase) {
   const dashboard = buildRiskDashboard(selectedCase);
   elements.riskDashboardLabel.textContent = `${dashboard.modeLabel} · ${dashboard.alerts.filter((item) => item.level !== "good").length} 个提醒`;
-  elements.riskDashboard.innerHTML = `
-    <div class="risk-main">
-      <div class="risk-metrics">
-        <div class="risk-card"><span>现金比例</span><strong class="${dashboard.cashPct < dashboard.reserveCashPct ? "negative" : ""}">${formatPlainPercent(dashboard.cashPct)}</strong></div>
-        <div class="risk-card"><span>已结算现金</span><strong>${formatCurrency(dashboard.settlement.settledCash)}</strong></div>
-        <div class="risk-card"><span>港币口径收益</span><strong class="${dashboard.funding.homeReturnPct >= 0 ? "positive" : "negative"}">${formatPercent(dashboard.funding.homeReturnPct)}</strong></div>
-        <div class="risk-card"><span>最大回撤</span><strong class="${dashboard.maxDrawdownPct >= 5 ? "negative" : ""}">${formatPlainPercent(dashboard.maxDrawdownPct)}</strong></div>
-        <div class="risk-card"><span>最大仓位</span><strong>${formatPlainPercent(dashboard.maxPositionPct)}</strong></div>
-        <div class="risk-card"><span>换手率</span><strong>${formatPlainPercent(dashboard.turnoverPct)}</strong></div>
-      </div>
-      <div class="risk-alerts">
-        ${dashboard.alerts.map((alert) => `
-          <div class="risk-alert is-${escapeHtml(alert.level)}">
-            <strong>${escapeHtml(alert.title)}</strong>
-            <span>${escapeHtml(alert.detail)}</span>
-          </div>
-        `).join("")}
-      </div>
-    </div>
-    <div class="risk-exposures">
-      <section>
-        <h3>持仓暴露</h3>
-        <div class="exposure-list">${dashboard.positionRows.map(renderExposureRow).join("")}</div>
-      </section>
-      <section>
-        <h3>行业暴露</h3>
-        <div class="exposure-list">${dashboard.sectorRows.map(renderExposureRow).join("")}</div>
-      </section>
-      <section>
-        <h3>压力测试</h3>
-        <div class="stress-list">${dashboard.stressRows.map(renderStressRow).join("")}</div>
-      </section>
-      <section>
-        <h3>隔夜跳空</h3>
-        <div class="position-plan-list">${dashboard.gapRows.map(renderGapRiskRow).join("")}</div>
-      </section>
-      <section>
-        <h3>事件日风险</h3>
-        <div class="position-plan-list">${dashboard.eventRiskRows.map(renderEventRiskRow).join("")}</div>
-      </section>
-      <section>
-        <h3>配置蓝图</h3>
-        <div class="position-plan-list">${dashboard.allocationStatus.items.map(renderAllocationRow).join("")}</div>
-      </section>
-      <section>
-        <h3>资金与汇率</h3>
-        <div class="position-plan-list">${renderFundingDashboardRows(dashboard.funding)}</div>
-      </section>
-      <section>
-        <h3>资金结算</h3>
-        <div class="position-plan-list">${renderSettlementDashboardRows(dashboard.settlement)}</div>
-      </section>
-      <section>
-        <h3>持仓计划</h3>
-        <div class="position-plan-list">${dashboard.planRows.map(renderPositionPlanRow).join("")}</div>
-      </section>
-      <section>
-        <h3>盘中复查</h3>
-        ${renderCheckpointLogPanel(selectedCase)}
-      </section>
-    </div>
-  `;
+  elements.riskDashboard.innerHTML = MarketReplayRiskDashboardUI.renderRiskDashboard(dashboard, {
+    escapeHtml,
+    formatCurrency,
+    formatHomeCurrency,
+    formatPercent,
+    formatPlainPercent,
+    displayDay,
+    eventRiskLevelLabel,
+    missionStatusLabel,
+    checkpointBiasLabel,
+    checkpointActionLabel,
+    checkpointPanelHtml: renderCheckpointLogPanel(selectedCase),
+  });
   drawEquityChart(selectedCase, dashboard);
 }
 
@@ -6899,220 +6850,17 @@ function renderCheckpointLogPanel(selectedCase = getCase()) {
     .filter((item) => item.day <= state.day)
     .sort((a, b) => b.day - a.day || String(b.savedAt || "").localeCompare(String(a.savedAt || "")))
     .slice(0, 5);
-  return `
-    <div class="position-plan-row">
-      <div class="form-grid">
-        <label>
-          复查标的
-          <select id="checkpointSymbolInput">
-            ${symbols.map((symbol) => `<option value="${escapeHtml(symbol)}" ${symbol === state.selectedSymbol ? "selected" : ""}>${escapeHtml(symbol)}</option>`).join("")}
-          </select>
-        </label>
-        <label>
-          当前判断
-          <select id="checkpointBiasInput">
-            <option value="unchanged">原计划仍成立</option>
-            <option value="improving">证据改善</option>
-            <option value="deteriorating">证据恶化</option>
-            <option value="uncertain">不确定，先降速</option>
-          </select>
-        </label>
-        <label>
-          后续动作
-          <select id="checkpointActionInput">
-            <option value="hold">按计划持有</option>
-            <option value="trim">减仓/再平衡</option>
-            <option value="stop">止损/退出</option>
-            <option value="add-no">禁止加仓</option>
-            <option value="wait">继续观察</option>
-          </select>
-        </label>
-        <label class="checkbox-line">
-          <input id="checkpointRiskChangedInput" type="checkbox" />
-          风险已经变化
-        </label>
-      </div>
-      <label>
-        复查记录
-        <textarea id="checkpointNoteInput" rows="2" placeholder="写清楚：原计划是否还成立、哪条证据改变了、下一次什么条件再处理。"></textarea>
-      </label>
-      <div class="reflection-actions">
-        <button class="mini-button" type="button" data-save-checkpoint-log ${state.revealed ? "disabled" : ""}>保存复查</button>
-        <span>${state.revealed ? "复盘后不能再新增复查记录。" : "保存后会刷新持仓计划的最近复查时间。"}</span>
-      </div>
-    </div>
-    <div class="position-plan-list">
-      ${logs.map(renderCheckpointLogRow).join("") || `<div class="position-plan-row is-warn"><p>还没有复查记录。买入后不要只看盈亏，要定期写清楚原计划是否仍成立。</p></div>`}
-    </div>
-  `;
-}
-
-function renderCheckpointLogRow(log) {
-  return `
-    <div class="position-plan-row is-${log.riskChanged || log.bias === "deteriorating" ? "warn" : "good"}">
-      <div class="exposure-title">
-        <strong>${escapeHtml(log.symbol)} · 第 ${displayDay(log.day)} 天复查</strong>
-        <span>${escapeHtml(checkpointBiasLabel(log.bias))} · ${escapeHtml(checkpointActionLabel(log.action))}</span>
-      </div>
-      <p>${escapeHtml(log.note || "")}</p>
-    </div>
-  `;
-}
-
-function renderExposureRow(row) {
-  return `
-    <div class="exposure-row">
-      <div class="exposure-title">
-        <strong>${escapeHtml(row.label)}</strong>
-        <span>${formatPlainPercent(row.weightPct)}</span>
-      </div>
-      <div class="exposure-bar"><div class="exposure-fill ${escapeHtml(row.level || "")}" style="width:${Math.min(100, Math.max(0, row.weightPct))}%"></div></div>
-      <span>${escapeHtml(row.detail)}</span>
-    </div>
-  `;
-}
-
-function renderStressRow(row) {
-  return `
-    <div class="stress-row is-${escapeHtml(row.level)}">
-      <div class="exposure-title">
-        <strong>${escapeHtml(row.label)}</strong>
-        <span>${escapeHtml(row.shock)}</span>
-      </div>
-      <div class="stress-metrics">
-        <span>潜在亏损 ${formatCurrency(row.loss)}</span>
-        <span>权益影响 ${formatPlainPercent(row.lossPct)}</span>
-        <span>冲击后 ${formatCurrency(row.afterEquity)}</span>
-      </div>
-      <p>${escapeHtml(row.detail)}</p>
-    </div>
-  `;
-}
-
-function renderGapRiskRow(row) {
-  return `
-    <div class="position-plan-row is-${escapeHtml(row.level)}">
-      <div class="exposure-title">
-        <strong>${escapeHtml(row.symbol)} · ${escapeHtml(row.name)}</strong>
-        <span>${formatPercent(row.gapPct)}</span>
-      </div>
-      <div class="plan-metrics">
-        <span>前收 ${formatCurrency(row.previousClose)}</span>
-        <span>今开 ${formatCurrency(row.open)}</span>
-        <span>日内 ${formatPercent(row.dayChangePct)}</span>
-      </div>
-      <p>${escapeHtml(row.detail)}</p>
-    </div>
-  `;
-}
-
-function renderEventRiskRow(row) {
-  return `
-    <div class="position-plan-row is-${row.level}">
-      <div class="exposure-title">
-        <strong>第 ${displayDay(row.day)} 天 · ${escapeHtml(row.title)}</strong>
-        <span>${escapeHtml(row.statusLabel)} · ${escapeHtml(row.typeLabel)}</span>
-      </div>
-      <div class="plan-metrics">
-        <span>${escapeHtml(eventRiskLevelLabel(row.riskLevel))}</span>
-        <span>${row.daysUntil > 0 ? `${row.daysUntil} 天后` : row.daysUntil < 0 ? `已过 ${Math.abs(row.daysUntil)} 天` : "今天"}</span>
-      </div>
-      <p>${escapeHtml(row.detail)}</p>
-    </div>
-  `;
-}
-
-function renderPositionPlanRow(row) {
-  return `
-    <div class="position-plan-row is-${escapeHtml(row.level)}">
-      <div class="exposure-title">
-        <strong>${escapeHtml(row.title)}</strong>
-        <span>${escapeHtml(row.statusLabel)}</span>
-      </div>
-      <div class="plan-metrics">
-        <span>浮动 ${formatCurrency(row.unrealizedPnl)} / ${formatPlainPercent(row.pnlPct)}</span>
-        <span>最大不利 ${formatPlainPercent(row.maxAdversePct)}</span>
-        <span>${row.riskLimitPct ? `自定亏损线 ${formatPlainPercent(row.riskLimitPct)}` : "未写亏损线"}</span>
-      </div>
-      <p>${escapeHtml(row.detail)}</p>
-      <p><strong>失效条件：</strong>${escapeHtml(row.invalidation)}</p>
-      <p><strong>下一步：</strong>${escapeHtml(row.actionHint)}</p>
-    </div>
-  `;
-}
-
-function renderAllocationRow(row) {
-  return `
-    <div class="position-plan-row is-${row.status === "fail" ? "danger" : row.status === "warn" || row.status === "pending" ? "warn" : "good"}">
-      <div class="exposure-title">
-        <strong>${escapeHtml(row.title)}</strong>
-        <span>${escapeHtml(missionStatusLabel(row.status))}</span>
-      </div>
-      <p>${escapeHtml(row.detail)}</p>
-    </div>
-  `;
-}
-
-function renderFundingDashboardRows(funding) {
-  const rows = [
-    {
-      title: "入金口径",
-      detail: `模拟港币入金 ${formatHomeCurrency(funding.initialHomeDeposit)}，换汇后获得可交易美元 ${formatCurrency(funding.initialUsdCash)}。`,
-      status: "good",
-    },
-    {
-      title: "换汇成本",
-      detail: `假设换汇成本 ${formatPlainPercent(funding.fxFeeBps / 100)}，约 ${formatCurrency(funding.initialFxCostUsd)} / ${formatHomeCurrency(funding.initialFxCostHome)}。`,
-      status: funding.fxFeeBps > 35 ? "warn" : "good",
-    },
-    {
-      title: "港币口径收益",
-      detail: `当前总资产折合 ${formatHomeCurrency(funding.equityHome)}，相对初始港币入金 ${formatPercent(funding.homeReturnPct)}；美元口径为 ${formatPercent(funding.usdReturnPct)}。`,
-      status: funding.homeReturnPct >= 0 ? "good" : "warn",
-    },
-  ];
-  return rows.map((row) => `
-    <div class="position-plan-row is-${escapeHtml(row.status)}">
-      <div class="exposure-title">
-        <strong>${escapeHtml(row.title)}</strong>
-        <span>${row.status === "good" ? "已纳入" : "需注意"}</span>
-      </div>
-      <p>${escapeHtml(row.detail)}</p>
-    </div>
-  `).join("");
-}
-
-function renderSettlementDashboardRows(settlement) {
-  const rows = [
-    {
-      title: "已结算现金",
-      detail: `当前已结算现金 ${formatCurrency(settlement.settledCash)}，可用于训练中不触发结算提醒的买入。`,
-      status: "good",
-    },
-    {
-      title: "未结算卖出款",
-      detail: settlement.unsettledProceeds
-        ? `当前有 ${formatCurrency(settlement.unsettledProceeds)} 卖出款未完成 ${settlement.cycle} 结算，待结算记录 ${settlement.pendingCount} 条。`
-        : `当前没有未结算卖出款。美股训练默认按 ${settlement.cycle} 处理。`,
-      status: settlement.unsettledProceeds ? "warn" : "good",
-    },
-    {
-      title: "今日到期结算",
-      detail: settlement.dueTodayCount
-        ? `有 ${settlement.dueTodayCount} 条卖出款到达结算日，推进时间后会自动转为已结算。`
-        : "当前没有到期但未处理的结算记录。",
-      status: settlement.dueTodayCount ? "warn" : "good",
-    },
-  ];
-  return rows.map((row) => `
-    <div class="position-plan-row is-${escapeHtml(row.status)}">
-      <div class="exposure-title">
-        <strong>${escapeHtml(row.title)}</strong>
-        <span>${row.status === "good" ? "正常" : "需注意"}</span>
-      </div>
-      <p>${escapeHtml(row.detail)}</p>
-    </div>
-  `).join("");
+  return MarketReplayRiskDashboardUI.renderCheckpointLogPanel({
+    symbols,
+    logs,
+    selectedSymbol: state.selectedSymbol,
+    revealed: state.revealed,
+  }, {
+    escapeHtml,
+    displayDay,
+    checkpointBiasLabel,
+    checkpointActionLabel,
+  });
 }
 
 function buildRiskDashboard(selectedCase) {

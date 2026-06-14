@@ -90,6 +90,10 @@ const CHECKS = [
     command: ["node", "--check", "ui/case-list.js"],
   },
   {
+    name: "risk dashboard UI syntax",
+    command: ["node", "--check", "ui/risk-dashboard.js"],
+  },
+  {
     name: "profile insights UI syntax",
     command: ["node", "--check", "ui/profile-insights.js"],
   },
@@ -176,6 +180,10 @@ const CHECKS = [
   {
     name: "case list UI smoke",
     command: ["node", "tests/ui-case-list-smoke.js"],
+  },
+  {
+    name: "risk dashboard UI smoke",
+    command: ["node", "tests/ui-risk-dashboard-smoke.js"],
   },
   {
     name: "profile insights UI smoke",

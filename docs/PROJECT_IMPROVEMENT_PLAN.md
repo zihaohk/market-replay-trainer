@@ -168,5 +168,6 @@ npm test
 
 - 已完成公开仓库基线。
 - 已完成第一批动态 HTML 转义和 URL 白名单。
-- 正在拆分 `ui/case-list.js`，把案例列表、案例简介、观察列表和相对强弱面板的 HTML 渲染从 `app.js` 迁出。
+- 已拆分 `ui/case-list.js`，把案例列表、案例简介、观察列表和相对强弱面板的 HTML 渲染从 `app.js` 迁出。
+- 正在拆分 `ui/risk-dashboard.js`，把风险仪表盘和相关 row renderer 从 `app.js` 迁出。
 - 保持现有本地运行方式和业务逻辑不变。
