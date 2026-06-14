@@ -2,6 +2,9 @@ const STORAGE_KEY = "market-replay-trainer-v1";
 const PROFILE_KEY = "market-replay-profile-v1";
 const CUSTOM_CASES_KEY = "market-replay-custom-cases-v1";
 const BACKUP_SCHEMA_VERSION = 2;
+const CSV_IMPORT_CHAR_LIMIT = 2_000_000;
+const PACKAGE_IMPORT_CHAR_LIMIT = 5_000_000;
+const PACKAGE_FILE_BYTE_LIMIT = 8 * 1024 * 1024;
 
 const riskPolicy = {
   initialCash: 100000,
@@ -7799,11 +7802,13 @@ function importCsvCase(event) {
   try {
     const title = elements.importTitleInput.value.trim();
     const symbol = elements.importSymbolInput.value.trim();
-    const hasSymbolColumn = splitCsvLine(elements.importCsvInput.value.split(/\r?\n/).find((line) => line.trim()) || "")
+    const csvText = elements.importCsvInput.value;
+    assertImportTextSize(csvText, CSV_IMPORT_CHAR_LIMIT, "CSV");
+    const hasSymbolColumn = splitCsvLine(csvText.split(/\r?\n/).find((line) => line.trim()) || "")
       .map((item) => item.toLowerCase())
       .includes("symbol");
     if (!symbol && !hasSymbolColumn) throw new Error("单标的 CSV 请输入真实代码；多标的 CSV 可在表头加入 Symbol。");
-    const assets = parseCsvAssets(elements.importCsvInput.value, symbol || "CUSTOM");
+    const assets = parseCsvAssets(csvText, symbol || "CUSTOM");
     const qualityReport = buildCsvQualityReport(assets);
     renderImportQualityReport(qualityReport);
     const importedCase = createImportedCase({ title, symbol: symbol || assets[0].symbol, rows: assets[0].rows, assets, qualityReport });
@@ -7833,6 +7838,7 @@ function importScenarioPackageCase() {
 }
 
 function importScenarioPackageFromText(packageText, sourceName = "", options = {}) {
+  assertImportTextSize(packageText, PACKAGE_IMPORT_CHAR_LIMIT, "JSON 案例包");
   const parsedPayload = parseScenarioPackageJsonPayload(packageText);
   if (isScenarioPackageBundle(parsedPayload)) {
     return importScenarioPackageBundle(parsedPayload, sourceName, options);
@@ -7921,10 +7927,15 @@ function caseLibraryImportSummary(summary, lastCaseId) {
 }
 
 function readScenarioPackageFile(file, handlers = {}) {
+  if (Number.isFinite(file?.size) && file.size > PACKAGE_FILE_BYTE_LIMIT) {
+    handlers.onError?.(new Error(`案例包文件太大：${formatByteSize(file.size)}，上限 ${formatByteSize(PACKAGE_FILE_BYTE_LIMIT)}。请拆成多个较小案例包或案例库 bundle。`), file);
+    return;
+  }
   const reader = new FileReader();
   reader.onload = () => {
     try {
       const packageText = `${reader.result || ""}`;
+      assertImportTextSize(packageText, PACKAGE_IMPORT_CHAR_LIMIT, "JSON 案例包");
       const result = importScenarioPackageFromText(packageText, file.name || "", handlers.importOptions || {});
       if (result && Array.isArray(result.imported)) handlers.onBundleSuccess?.(result, file);
       else handlers.onSuccess?.(result, file);
@@ -8022,6 +8033,7 @@ function previewImportQuality() {
     return;
   }
   try {
+    assertImportTextSize(csvText, CSV_IMPORT_CHAR_LIMIT, "CSV");
     const hasSymbolColumn = splitCsvLine(csvText.split(/\r?\n/).find((line) => line.trim()) || "")
       .map((item) => item.toLowerCase())
       .includes("symbol");
@@ -8046,10 +8058,32 @@ function previewScenarioPackageQuality() {
     return;
   }
   try {
+    assertImportTextSize(packageText, PACKAGE_IMPORT_CHAR_LIMIT, "JSON 案例包");
     renderScenarioPackageQualityReport(buildScenarioPackageQualityReport(packageText));
   } catch (error) {
     renderScenarioPackageQualityReport(null, error.message);
   }
+}
+
+function assertImportTextSize(text, limit, label) {
+  const length = String(text || "").length;
+  if (length > limit) {
+    throw new Error(`${label} 内容太大：约 ${formatCharSize(length)}，上限 ${formatCharSize(limit)}。请拆分文件后再导入。`);
+  }
+}
+
+function formatCharSize(length) {
+  const count = Number(length) || 0;
+  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M 字符`;
+  if (count >= 1_000) return `${Math.round(count / 1_000)}K 字符`;
+  return `${count} 字符`;
+}
+
+function formatByteSize(size) {
+  const bytes = Number(size) || 0;
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
+  if (bytes >= 1024) return `${Math.round(bytes / 1024)}KB`;
+  return `${bytes}B`;
 }
 
 function exportProfileData() {
