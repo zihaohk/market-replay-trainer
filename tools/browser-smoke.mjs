@@ -79,6 +79,8 @@ export async function runBrowserSmoke(options = {}) {
     await page.goto(pathToFileURL(resolve(cwd, "index.html")).href, { waitUntil: "domcontentloaded" });
     await page.waitForSelector("#caseList .case-card", { timeout: 10_000 });
     await assertText(page, "h1", "美股历史盲测训练器", "页面标题没有正常渲染。");
+    await assertText(page, ".scope-notice", "训练工具，不是投资建议", "页面没有显示投资建议边界提示。");
+    await assertText(page, ".scope-notice", "税费、汇率、滑点和成交假设", "页面没有显示训练假设提示。");
     const caseCount = await page.locator("#caseList .case-card").count();
     assert(caseCount >= 20, `案例列表数量异常：预期至少 20 个，实际 ${caseCount} 个。`);
     await assertCanvasNonBlank(page, "#priceChart", "价格图没有绘制有效像素。");

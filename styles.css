@@ -112,6 +112,30 @@ h2 {
   min-height: 36px;
 }
 
+.scope-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid #d8e4df;
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  background: #f2f8f6;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.scope-notice strong {
+  flex: 0 0 auto;
+  color: var(--accent-dark);
+}
+
+.scope-notice span {
+  color: var(--muted);
+}
+
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
