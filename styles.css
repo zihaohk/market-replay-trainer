@@ -252,6 +252,34 @@ th,
   padding: 14px 16px;
 }
 
+.panel-disclosure > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.panel-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel-disclosure > summary::after {
+  content: "展开";
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.panel-disclosure[open] > summary::after {
+  content: "收起";
+}
+
+.panel-disclosure:not([open]) > summary {
+  border-bottom: 0;
+}
+
 .split-header {
   align-items: center;
 }

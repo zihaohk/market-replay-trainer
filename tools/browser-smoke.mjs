@@ -83,6 +83,11 @@ export async function runBrowserSmoke(options = {}) {
     await assertText(page, ".scope-notice", "税费、汇率、滑点和成交假设", "页面没有显示训练假设提示。");
     await assertText(page, "#todayPlanPanel", "今日建议训练", "首屏没有显示今日建议训练入口。");
     await assertText(page, "#todayPlanPanel", "按建议开始", "首屏今日建议训练入口缺少启动按钮。");
+    const advancedPanelsCollapsed = await page.evaluate(() => {
+      const panels = [...document.querySelectorAll(".panel-disclosure")];
+      return panels.length >= 2 && panels.every((panel) => !panel.open);
+    });
+    assert(advancedPanelsCollapsed, "高级分析区没有默认折叠。");
     const caseCount = await page.locator("#caseList .case-card").count();
     assert(caseCount >= 20, `案例列表数量异常：预期至少 20 个，实际 ${caseCount} 个。`);
     await assertCanvasNonBlank(page, "#priceChart", "价格图没有绘制有效像素。");
