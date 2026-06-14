@@ -1779,6 +1779,7 @@ vm.runInContext(`
 `, context);
 const reflectionSave = vm.runInContext("saveReviewReflection()", context);
 assert(reflectionSave.ok, "review reflection should save when all prompts are complete");
+assert(vm.runInContext("elements.tradeMessage.textContent", context).includes("导出备份"), "saving reflection should remind the user to export a backup");
 const savedReflection = vm.runInContext("profile.completedRuns[0].reflection", context);
 assert(savedReflection && savedReflection.nextRule.includes("active hold"), "completed run should store saved reflection");
 const rulebookAfterReflection = vm.runInContext("profile.rulebook", context);

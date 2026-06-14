@@ -2902,6 +2902,17 @@ tbody tr:last-child td {
   font-size: 12px;
 }
 
+.backup-reminder {
+  margin-top: 2px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--warning);
+  border-radius: 6px;
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .remediation-card {
   display: grid;
   gap: 10px;

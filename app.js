@@ -9765,7 +9765,7 @@ function saveReviewReflection() {
   saveProfile();
   renderReview(getCase());
   renderProfile();
-  showMessage("复盘反思已保存。");
+  showMessage("复盘反思已保存。建议点击顶部“导出备份”保存完整训练记录。");
   return { ok: true, reflection };
 }
 

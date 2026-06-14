@@ -235,6 +235,7 @@
         <button class="mini-button" type="button" data-save-reflection>保存反思</button>
         <span>${reflection?.savedAt ? `已保存：${helpers.formatDateTime(reflection.savedAt)}` : "还未保存反思"}</span>
       </div>
+      <p class="backup-reminder">训练记录只保存在当前浏览器本地。保存复盘后建议点击顶部“导出备份”，避免清缓存、换浏览器或系统故障导致长期画像丢失。</p>
     </div>
   `;
   }

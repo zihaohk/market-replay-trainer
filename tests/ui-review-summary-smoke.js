@@ -937,6 +937,7 @@ assert(reviewActionHtml.includes("买太急"));
 assert(reviewActionHtml.includes("先等一天"));
 assert(reviewActionHtml.includes("data-save-reflection"));
 assert(reviewActionHtml.includes("已保存：2026/6/14 12:00"));
+assert(reviewActionHtml.includes("导出备份"));
 assert(reviewActionHtml.includes("补练处方"));
 assert(reviewActionHtml.includes("补练仓位控制"));
 assert(reviewActionHtml.includes("下一轮：case-002 · 匿名回撤训练"));
@@ -957,6 +958,7 @@ assert(reviewActionHtml.includes("ETF 也会回撤"));
 
 const emptyReviewActionHtml = ui.renderReviewActionSection({}, {}, {}, { formatPercent });
 assert(emptyReviewActionHtml.includes("还未保存反思"));
+assert(emptyReviewActionHtml.includes("训练记录只保存在当前浏览器本地"));
 assert(emptyReviewActionHtml.includes("暂无补练处方"));
 assert(emptyReviewActionHtml.includes("待选择"));
 assert(emptyReviewActionHtml.includes("完成下一轮训练并保存复盘。"));
