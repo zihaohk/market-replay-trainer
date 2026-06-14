@@ -387,6 +387,32 @@ const textImportedPackage = vm.runInContext(`
   ({ count: customCaseLibrary.length, message: elements.importMessage.textContent, textValue: elements.importPackageInput.value });
 `, context);
 assert(textImportedPackage.count === 1 && textImportedPackage.message.includes("case-h-001.package.json") && textImportedPackage.textValue === "", "scenario package text import should save the case and report the source file");
+const packageImportRecovery = vm.runInContext(`
+  customCaseLibrary = [];
+  elements.importPackageInput.value = '{';
+  elements.importPackageQualityPanel.innerHTML = '';
+  importScenarioPackageCase();
+  const failed = {
+    count: customCaseLibrary.length,
+    message: elements.importMessage.textContent,
+    html: elements.importPackageQualityPanel.innerHTML,
+    textValue: elements.importPackageInput.value,
+  };
+  elements.importPackageInput.value = ${JSON.stringify(scenarioPackageJson)};
+  importScenarioPackageCase();
+  ({
+    failed,
+    count: customCaseLibrary.length,
+    message: elements.importMessage.textContent,
+    html: elements.importPackageQualityPanel.innerHTML,
+    textValue: elements.importPackageInput.value,
+    currentCaseId: state.caseId,
+  });
+`, context);
+assert(packageImportRecovery.failed.count === 0 && packageImportRecovery.failed.message.includes("不是有效 JSON"), "failed package import should show the parse error without saving a case");
+assert(packageImportRecovery.failed.html.includes("案例包体检失败") && packageImportRecovery.failed.textValue === "{", "failed package import should keep the bad text available for correction");
+assert(packageImportRecovery.count === 1 && packageImportRecovery.message.includes("已导入案例包") && packageImportRecovery.textValue === "", "package import should recover after a failed attempt");
+assert(packageImportRecovery.html === "" && packageImportRecovery.currentCaseId === vm.runInContext("customCaseLibrary[0].id", context), "successful retry should clear the error panel and switch to the imported case");
 const fileImportedPackage = vm.runInContext(`
   customCaseLibrary = [];
   elements.importPackageInput.value = '';
