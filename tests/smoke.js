@@ -620,6 +620,39 @@ const legacyBackupRestore = vm.runInContext(`
 `, context);
 assert(!legacyBackupRestore.summary.restoredState && legacyBackupRestore.runs === 1, "legacy profile backups should still import without a state payload");
 assert(legacyBackupRestore.caseId === "A-01" && legacyBackupRestore.day === 2 && legacyBackupRestore.mode === "advanced", "legacy backup import should keep the current training state");
+const legacyProfileMigration = vm.runInContext(`
+  localStorage.setItem(PROFILE_KEY, JSON.stringify({
+    mistakeCounts: { '追高': 2 },
+    emotionCounts: 'bad old value',
+    completedCaseIds: 'bad old value',
+    lessonStats: { 'A-01': { attempts: 1, passes: 1 } },
+    rulebook: [{ id: 'old-rule', text: '先观望再下单', active: true }]
+  }));
+  const migratedProfile = loadProfile();
+  ({
+    runs: migratedProfile.completedRuns.length,
+    mistakeCount: migratedProfile.mistakeCounts['追高'],
+    emotionIsObject: typeof migratedProfile.emotionCounts === 'object' && !Array.isArray(migratedProfile.emotionCounts),
+    completedCaseIdsIsArray: Array.isArray(migratedProfile.completedCaseIds),
+    lessonAttempts: migratedProfile.lessonStats['A-01'].attempts,
+    ruleText: migratedProfile.rulebook[0].text,
+  });
+`, context);
+assert(legacyProfileMigration.runs === 0 && legacyProfileMigration.mistakeCount === 2, "legacy localStorage profile should keep old count fields even without completedRuns");
+assert(legacyProfileMigration.emotionIsObject && legacyProfileMigration.completedCaseIdsIsArray && legacyProfileMigration.lessonAttempts === 1 && legacyProfileMigration.ruleText.includes("观望"), "legacy localStorage profile migration should repair bad field types while preserving usable fields");
+const partialLegacyBackupRestore = vm.runInContext(`
+  profile = loadProfileFromScratch();
+  const partialLegacyBackupSmoke = { profile: { mistakeCounts: { '缺少观望': 3 }, rulebook: [{ id: 'legacy-rule', text: '第一天必须观望', active: true }] }, customCases: [] };
+  const partialLegacyRestoreSummarySmoke = restoreBackupPayload(partialLegacyBackupSmoke);
+  ({
+    summary: partialLegacyRestoreSummarySmoke,
+    runs: profile.completedRuns.length,
+    mistakeCount: profile.mistakeCounts['缺少观望'],
+    ruleText: profile.rulebook[0].text,
+  });
+`, context);
+assert(partialLegacyBackupRestore.runs === 0 && partialLegacyBackupRestore.mistakeCount === 3 && partialLegacyBackupRestore.ruleText.includes("第一天"), "partial legacy profile backups should migrate instead of being discarded");
+assert(vm.runInContext("try { restoreBackupPayload({ customCases: [] }); false; } catch (error) { error.message.includes('profile'); }", context), "backup restore should still reject files without recognizable profile data");
 
 vm.runInContext("state = defaultState('A-01', 'exam'); state.day = 3; state.decisions.push({ day: 1, side: 'hold', symbol: 'ETF-A', quantity: 0, price: 0, amount: 0, emotion: 'calm', risk: 5, confidence: 3, evidenceSources: ['price'], reason: 'test', info: 'test', invalidation: 'test' });", context);
 const review = vm.runInContext("buildReview(getCase('A-01'))", context);

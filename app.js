@@ -1358,24 +1358,33 @@ function saveCustomCases() {
 function loadProfile() {
   try {
     const parsed = JSON.parse(localStorage.getItem(PROFILE_KEY));
-    return normalizeProfileData(parsed);
+    return normalizeProfileData(parsed, { allowEmptyProfile: true });
   } catch {
     return loadProfileFromScratch();
   }
 }
 
-function normalizeProfileData(rawProfile) {
-  if (!rawProfile || typeof rawProfile !== "object" || !Array.isArray(rawProfile.completedRuns)) {
-    throw new Error("备份文件缺少 profile.completedRuns。");
+function normalizeProfileData(rawProfile, options = {}) {
+  if (!rawProfile || typeof rawProfile !== "object" || Array.isArray(rawProfile)) {
+    if (options.allowEmptyProfile) return loadProfileFromScratch();
+    throw new Error("备份文件缺少可识别的 profile 数据。");
   }
+  const knownProfileFields = ["completedRuns", "mistakeCounts", "emotionCounts", "completedCaseIds", "lessonStats", "rulebook"];
+  const hasKnownField = knownProfileFields.some((key) => Object.prototype.hasOwnProperty.call(rawProfile, key));
+  if (!hasKnownField && !options.allowEmptyProfile) throw new Error("备份文件缺少可识别的 profile 数据。");
+  if (!hasKnownField) return loadProfileFromScratch();
   return {
-    completedRuns: rawProfile.completedRuns || [],
-    mistakeCounts: rawProfile.mistakeCounts || {},
-    emotionCounts: rawProfile.emotionCounts || {},
-    completedCaseIds: rawProfile.completedCaseIds || [],
-    lessonStats: rawProfile.lessonStats || {},
-    rulebook: rawProfile.rulebook || [],
+    completedRuns: Array.isArray(rawProfile.completedRuns) ? rawProfile.completedRuns : [],
+    mistakeCounts: isPlainObject(rawProfile.mistakeCounts) ? rawProfile.mistakeCounts : {},
+    emotionCounts: isPlainObject(rawProfile.emotionCounts) ? rawProfile.emotionCounts : {},
+    completedCaseIds: Array.isArray(rawProfile.completedCaseIds) ? rawProfile.completedCaseIds : [],
+    lessonStats: isPlainObject(rawProfile.lessonStats) ? rawProfile.lessonStats : {},
+    rulebook: Array.isArray(rawProfile.rulebook) ? rawProfile.rulebook : [],
   };
+}
+
+function isPlainObject(value) {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
 function loadProfileFromScratch() {
