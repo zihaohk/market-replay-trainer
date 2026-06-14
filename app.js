@@ -3571,78 +3571,52 @@ function getCurrentSymbolWeight(symbol) {
 function renderPositions() {
   const entries = Object.entries(state.positions).filter(([, position]) => position.quantity > 0);
   elements.positionCount.textContent = `${entries.length} 项`;
-  if (!entries.length) {
-    elements.positionsTable.innerHTML = `<tr><td class="empty-row" colspan="6">暂无持仓</td></tr>`;
-    return;
-  }
-
-  elements.positionsTable.innerHTML = entries
-    .map(([symbol, position]) => {
+  elements.positionsTable.innerHTML = MarketReplayHistoryUI.renderPositions(
+    entries.map(([symbol, position]) => {
       const price = getPrice(symbol);
       const value = position.quantity * price;
       const pnl = value - position.quantity * position.averageCost;
-      return `
-        <tr>
-          <td><strong>${symbol}</strong></td>
-          <td>${formatNumber(position.quantity)}</td>
-          <td>${formatCurrency(position.averageCost)}</td>
-          <td>${formatCurrency(price)}</td>
-          <td>${formatCurrency(value)}</td>
-          <td class="${pnl >= 0 ? "positive" : "negative"}">${formatCurrency(pnl)}</td>
-        </tr>
-      `;
-    })
-    .join("");
+      return {
+        symbol,
+        quantity: position.quantity,
+        averageCost: position.averageCost,
+        price,
+        value,
+        pnl,
+      };
+    }),
+    { escapeHtml, formatNumber, formatCurrency },
+  );
 }
 
 function renderHistory() {
   const orders = state.pendingOrders || [];
   const corporateActions = state.corporateActionLog || [];
   elements.historyCount.textContent = `${state.decisions.length} 条 · 挂单 ${activePendingOrders().length} · 公司行动 ${corporateActions.length}`;
-  if (!state.decisions.length && !orders.length && !corporateActions.length) {
-    elements.historyList.innerHTML = `<article class="history-item"><p>还没有决策记录。训练重点不是多交易，而是每次决定都有清楚理由。</p></article>`;
-    return;
-  }
-  const orderHtml = orders
-    .slice(0, 5)
-    .map((order) => `
-      <article class="history-item">
-        <strong>第 ${displayDay(order.createdDay)} 天 · 限价${decisionLabel(order.side)} · ${order.symbol}</strong>
-        <p>${order.quantity} 股，限价 ${formatCurrency(order.limitPrice)}，有效至第 ${displayDay(order.expiresDay)} 天。</p>
-        <p>状态：${pendingOrderStatusLabel(order.status)}${order.fillPrice ? ` · 成交价 ${formatCurrency(order.fillPrice)}` : ""}${order.cancelReason ? ` · ${escapeHtml(order.cancelReason)}` : ""}</p>
-        ${order.status === "active" && !state.revealed ? `<button class="mini-danger-button" type="button" data-cancel-pending-order="${order.id}">取消挂单</button>` : ""}
-      </article>
-    `)
-    .join("");
-  const corporateActionHtml = corporateActions
-    .slice(0, 5)
-    .map((item) => `
-      <article class="history-item">
-        <strong>第 ${displayDay(item.day)} 天 · 公司行动 · ${escapeHtml(item.symbol)}</strong>
-        <p>${escapeHtml(item.title)}</p>
-        <p>${escapeHtml(corporateActionEffectText(item))}</p>
-      </article>
-    `)
-    .join("");
-  const decisionHtml = state.decisions
-    .slice(0, 10)
-    .map((item) => `
-      <article class="history-item">
-        <strong>第 ${displayDay(item.day)} 天${state.revealed ? ` · ${getVisibleDate(getAsset(item.symbol), item.day)}` : ""} · ${decisionLabel(item.side)} · ${item.symbol}</strong>
-        <p>${item.side === "hold" ? "未交易" : `${item.quantity} 股，${formatCurrency(item.price)}，金额 ${formatCurrency(item.amount)}`}</p>
-        ${item.side !== "hold" && item.funding ? `<p>资金口径：折合 ${formatHomeCurrency(item.funding.amountHome)} · 汇率 ${item.funding.usdHkdRate}</p>` : ""}
-        ${item.side !== "hold" && item.settlement ? `<p>结算口径：${item.settlement.cycle} · 已结算 ${formatCurrency(item.settlement.settledCash)} · 未结算 ${formatCurrency(item.settlement.unsettledProceeds)}${item.settlement.usesUnsettledCash ? " · 动用未结算资金" : ""}</p>` : ""}
-        ${item.cashAccountWarnings?.length ? `<p>现金账户提醒：${item.cashAccountWarnings.map((warning) => escapeHtml(warning.detail)).join("；")}</p>` : ""}
-        ${item.side !== "hold" && Number(item.frictionCost) ? `<p>交易摩擦：${formatCurrency(item.frictionCost)} · ${formatPlainPercent((item.frictionBps || 0) / 100)} 点差假设</p>` : ""}
-        ${item.side !== "hold" && item.liquidity ? `<p>流动性：订单占量 ${formatPlainPercent(item.liquidity.volumeSharePct || 0)} · 估算冲击 ${formatCurrency(item.liquidity.impactCost || 0)}</p>` : ""}
-        <p>计划：${intentLabel(item.intent)} · ${horizonLabel(item.horizon)} · 检查 ${planCheckCount(item.planChecks)}/3</p>
-        <p>证据：${evidenceSourceText(item.evidenceSources)}</p>
-        ${item.coach ? `<p>下单质量：${item.coach.score}/100 · ${coachLevelLabel(item.coach.level)}${item.coach.issues?.length ? ` · ${item.coach.issues.map((issue) => issue.title).slice(0, 2).join("、")}` : ""}</p>` : `<p>下单质量：旧记录未保存</p>`}
-        <p>情绪：${emotionLabel(item.emotion)} · 信心：${confidenceLabel(item.confidence)} · 理由：${escapeHtml(item.reason)}</p>
-      </article>
-    `)
-    .join("");
-  elements.historyList.innerHTML = `${corporateActionHtml}${orderHtml}${decisionHtml}`;
+  elements.historyList.innerHTML = MarketReplayHistoryUI.renderHistory({
+    orders,
+    corporateActions,
+    decisions: state.decisions,
+    revealed: state.revealed,
+  }, {
+    escapeHtml,
+    formatNumber,
+    formatCurrency,
+    formatHomeCurrency,
+    formatPlainPercent,
+    displayDay,
+    decisionLabel,
+    pendingOrderStatusLabel,
+    corporateActionEffectText,
+    getDecisionDate: (item) => getVisibleDate(getAsset(item.symbol), item.day),
+    intentLabel,
+    horizonLabel,
+    planCheckCount,
+    evidenceSourceText,
+    coachLevelLabel,
+    emotionLabel,
+    confidenceLabel,
+  });
 }
 
 function renderMission(selectedCase) {

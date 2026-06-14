@@ -102,6 +102,10 @@ const CHECKS = [
     command: ["node", "--check", "ui/import-export.js"],
   },
   {
+    name: "history UI syntax",
+    command: ["node", "--check", "ui/history.js"],
+  },
+  {
     name: "profile insights UI syntax",
     command: ["node", "--check", "ui/profile-insights.js"],
   },
@@ -200,6 +204,10 @@ const CHECKS = [
   {
     name: "import export UI smoke",
     command: ["node", "tests/ui-import-export-smoke.js"],
+  },
+  {
+    name: "history UI smoke",
+    command: ["node", "tests/ui-history-smoke.js"],
   },
   {
     name: "profile insights UI smoke",
