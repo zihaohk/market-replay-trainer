@@ -83,5 +83,3 @@ assert(html.includes("&lt;invalid&gt;"));
 assert(html.includes("&lt;hint&gt;"));
 assert(!html.includes("<script>"));
 assert(html.includes("盘中复查"));
-
-console.log("risk dashboard UI smoke tests passed");

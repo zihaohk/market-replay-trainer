@@ -94,6 +94,10 @@ const CHECKS = [
     command: ["node", "--check", "ui/risk-dashboard.js"],
   },
   {
+    name: "trade form UI syntax",
+    command: ["node", "--check", "ui/trade-form.js"],
+  },
+  {
     name: "profile insights UI syntax",
     command: ["node", "--check", "ui/profile-insights.js"],
   },
@@ -184,6 +188,10 @@ const CHECKS = [
   {
     name: "risk dashboard UI smoke",
     command: ["node", "tests/ui-risk-dashboard-smoke.js"],
+  },
+  {
+    name: "trade form UI smoke",
+    command: ["node", "tests/ui-trade-form-smoke.js"],
   },
   {
     name: "profile insights UI smoke",
@@ -378,6 +386,9 @@ function sourceHygieneScript() {
     "core/runtime.js",
     "state/session.js",
     "ui/training-plan.js",
+    "ui/case-list.js",
+    "ui/risk-dashboard.js",
+    "ui/trade-form.js",
     "ui/profile-insights.js",
     "ui/review-summary.js",
     "ui/events.js",
@@ -414,6 +425,9 @@ function sourceHygieneScript() {
     "tests/runtime-smoke.js",
     "tests/session-state-smoke.js",
     "tests/ui-training-plan-smoke.js",
+    "tests/ui-case-list-smoke.js",
+    "tests/ui-risk-dashboard-smoke.js",
+    "tests/ui-trade-form-smoke.js",
     "tests/ui-profile-insights-smoke.js",
     "tests/ui-review-summary-smoke.js",
     "tests/ui-events-smoke.js",

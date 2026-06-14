@@ -2382,9 +2382,10 @@ function renderNews(selectedCase) {
 
 function renderTradeForm(selectedCase) {
   const lessonGate = buildLessonGate(selectedCase);
-  elements.symbolInput.innerHTML = selectedCase.assets
-    .map((item) => `<option value="${item.maskedSymbol}">${item.maskedSymbol} - ${displayAssetName(item)}</option>`)
-    .join("");
+  elements.symbolInput.innerHTML = MarketReplayTradeFormUI.renderSymbolOptions(
+    selectedCase.assets.map((item) => ({ symbol: item.maskedSymbol, name: displayAssetName(item) })),
+    { escapeHtml },
+  );
   elements.symbolInput.value = state.selectedSymbol;
   document.querySelectorAll(".side-button").forEach((button) => {
     button.classList.toggle("is-active", button.dataset.side === state.selectedSide);
@@ -2436,8 +2437,8 @@ function renderTradeForm(selectedCase) {
 
 function renderOrderPreview() {
   if (state.revealed) {
-    elements.orderPreview.innerHTML = `<div class="preview-warning">案例已复盘，不能再追加决策。</div>`;
-    elements.decisionCoach.innerHTML = `<div class="coach-summary is-good"><strong>训练已结束</strong><span>请把注意力放到复盘报告和下一轮补练。</span></div>`;
+    elements.orderPreview.innerHTML = MarketReplayTradeFormUI.renderClosedOrderPreview();
+    elements.decisionCoach.innerHTML = MarketReplayTradeFormUI.renderClosedDecisionCoach();
     renderSizingHint();
     return;
   }
@@ -2445,100 +2446,15 @@ function renderOrderPreview() {
   const lessonGate = buildLessonGate(getCase());
   const preview = buildOrderPreview();
   renderSizingHint();
-  const warningClass = preview.level === "danger" ? "danger" : preview.level === "good" ? "positive" : "";
-  elements.orderPreview.innerHTML = `
-    <div class="preview-grid">
-      <div class="preview-card"><span>预计成交价</span><strong>${formatCurrency(preview.price)}</strong></div>
-      <div class="preview-card"><span>预计金额</span><strong>${formatCurrency(preview.amount)}</strong></div>
-      <div class="preview-card"><span>折合港币</span><strong>${formatHomeCurrency(preview.fundingScenario?.amountHome || 0)}</strong></div>
-      <div class="preview-card"><span>交易摩擦</span><strong>${formatCurrency(preview.frictionCost || 0)}</strong></div>
-      <div class="preview-card"><span>成交占比</span><strong>${formatPlainPercent(preview.liquidityScenario?.volumeSharePct || 0)}</strong></div>
-      <div class="preview-card"><span>交易后现金</span><strong>${formatCurrency(preview.nextCash)}</strong></div>
-      <div class="preview-card"><span>标的仓位</span><strong>${formatPercent(preview.symbolWeightPct)}</strong></div>
-    </div>
-    ${renderTradeRiskScenario(preview.riskScenario)}
-    ${renderLiquidityScenario(preview.liquidityScenario)}
-    ${renderFundingScenario(preview.fundingScenario)}
-    ${renderSettlementScenario(preview.settlementScenario)}
-    <div class="preview-warning ${lessonGate.passed ? warningClass : "danger"}">${lessonGate.passed ? preview.message : lessonGate.message}</div>
-  `;
+  elements.orderPreview.innerHTML = MarketReplayTradeFormUI.renderOrderPreview(preview, lessonGate, {
+    escapeHtml,
+    formatCurrency,
+    formatHomeCurrency,
+    formatPercent,
+    formatPlainPercent,
+    formatCompactNumber,
+  });
   renderDecisionCoach(preview);
-}
-
-function renderTradeRiskScenario(scenario) {
-  if (!scenario) return "";
-  return `
-    <div class="trade-risk-scenario is-${scenario.level}">
-      <div class="scenario-head">
-        <strong>单笔风险预算</strong>
-        <span>${scenario.label}</span>
-      </div>
-      <div class="scenario-grid">
-        <span>止损参考 ${scenario.stopPrice ? formatCurrency(scenario.stopPrice) : "无"}</span>
-        <span>计划亏损 ${formatCurrency(scenario.lossAtStop)}</span>
-        <span>账户风险 ${formatPlainPercent(scenario.accountRiskPct)}</span>
-        <span>2R 目标 ${scenario.rewardTargetPrice ? formatCurrency(scenario.rewardTargetPrice) : "无"}</span>
-      </div>
-      <p>${scenario.detail}</p>
-    </div>
-  `;
-}
-
-function renderLiquidityScenario(scenario) {
-  if (!scenario) return "";
-  return `
-    <div class="trade-risk-scenario is-${scenario.level}">
-      <div class="scenario-head">
-        <strong>流动性与成交冲击</strong>
-        <span>${scenario.label}</span>
-      </div>
-      <div class="scenario-grid">
-        <span>当日成交量 ${formatCompactNumber(scenario.dayVolume)}</span>
-        <span>订单占量 ${formatPlainPercent(scenario.volumeSharePct)}</span>
-        <span>成交额占比 ${formatPlainPercent(scenario.dollarVolumeSharePct)}</span>
-        <span>估算冲击 ${formatCurrency(scenario.impactCost)}</span>
-      </div>
-      <p>${scenario.detail}</p>
-    </div>
-  `;
-}
-
-function renderFundingScenario(scenario) {
-  if (!scenario) return "";
-  return `
-    <div class="trade-risk-scenario is-${scenario.level}">
-      <div class="scenario-head">
-        <strong>资金与汇率口径</strong>
-        <span>${scenario.rateLabel}</span>
-      </div>
-      <div class="scenario-grid">
-        <span>入金 ${formatHomeCurrency(scenario.initialHomeDeposit)}</span>
-        <span>可用美元 ${formatCurrency(scenario.initialUsdCash)}</span>
-        <span>换汇成本 ${formatCurrency(scenario.initialFxCostUsd)}</span>
-        <span>港币口径收益 ${formatPercent(scenario.homeReturnPct)}</span>
-      </div>
-      <p>${scenario.detail}</p>
-    </div>
-  `;
-}
-
-function renderSettlementScenario(scenario) {
-  if (!scenario) return "";
-  return `
-    <div class="trade-risk-scenario is-${scenario.level}">
-      <div class="scenario-head">
-        <strong>资金结算</strong>
-        <span>${scenario.cycle}</span>
-      </div>
-      <div class="scenario-grid">
-        <span>已结算现金 ${formatCurrency(scenario.settledCash)}</span>
-        <span>未结算卖出款 ${formatCurrency(scenario.unsettledProceeds)}</span>
-        <span>交易后已结算 ${formatCurrency(scenario.nextSettledCash)}</span>
-        <span>${scenario.usesUnsettledCash ? "动用未结算" : "未动用未结算"}</span>
-      </div>
-      <p>${scenario.detail}</p>
-    </div>
-  `;
 }
 
 function buildOrderPreview() {
@@ -2900,21 +2816,7 @@ function getFrictionBps(symbol) {
 
 function renderDecisionCoach(preview = buildOrderPreview()) {
   const coach = buildDecisionCoach(preview);
-  const summaryClass = coach.level === "danger" ? "is-danger" : coach.level === "warn" ? "is-warn" : "is-good";
-  elements.decisionCoach.innerHTML = `
-    <div class="coach-summary ${summaryClass}">
-      <strong>决策教练 · ${coach.score}/100</strong>
-      <span>${coach.summary}</span>
-    </div>
-    <div class="coach-grid">
-      ${coach.items.map((item) => `
-        <article class="coach-card is-${item.level}">
-          <strong>${item.title}</strong>
-          <p>${item.detail}</p>
-        </article>
-      `).join("")}
-    </div>
-  `;
+  elements.decisionCoach.innerHTML = MarketReplayTradeFormUI.renderDecisionCoach(coach, { escapeHtml });
 }
 
 function createCoachSnapshot(coach) {
@@ -3697,15 +3599,6 @@ function clearSizingInputs() {
 }
 
 function renderSizingHint(result = null) {
-  if (state.revealed) {
-    elements.sizingHint.textContent = "案例已复盘，仓位计算器已停止。";
-    return;
-  }
-  if (state.selectedSide === "hold") {
-    elements.sizingHint.textContent = "观望时先写清楚等待条件，不需要计算股数。";
-    return;
-  }
-
   const symbol = elements.symbolInput.value || state.selectedSymbol;
   const price = getPrice(symbol);
   const totals = getPortfolioTotals();
@@ -3713,16 +3606,16 @@ function renderSizingHint(result = null) {
   const currentWeight = totals.equity ? (position.quantity * price / totals.equity) * 100 : 0;
   const quantity = Math.max(0, Number.parseInt(elements.quantityInput.value, 10) || 0);
   const amount = quantity * price;
-  const base = `${symbol} 当前价 ${formatCurrency(price)}，当前仓位 ${formatPlainPercent(currentWeight)}，${quantity || 1} 股约 ${formatCurrency(quantity ? amount : price)}。`;
-
-  if (!result) {
-    elements.sizingHint.textContent = `${base} 输入目标仓位、金额或单笔风险后点击换算。`;
-    return;
-  }
-
-  const capText = result.capped ? " 已按现金或持仓上限截断。" : "";
-  const zeroText = result.quantity <= 0 ? " 这个目标换算不出 1 股，说明目标太小、现金不足，或当前仓位已经达到目标。" : "";
-  elements.sizingHint.textContent = `${base} ${result.message} 可换算 ${result.quantity} 股。${capText}${zeroText}`.trim();
+  elements.sizingHint.textContent = MarketReplayTradeFormUI.renderSizingHint({
+    revealed: state.revealed,
+    selectedSide: state.selectedSide,
+    symbol,
+    price,
+    currentWeight,
+    quantity,
+    amount,
+    result,
+  }, { formatCurrency, formatPlainPercent });
 }
 
 function getCurrentSymbolWeight(symbol) {

@@ -96,5 +96,3 @@ const strengthHtml = ui.renderRelativeStrengthPanel({
 assert(strengthHtml.includes("&lt;Regime&gt;"));
 assert(strengthHtml.includes("&lt;BAD&gt;"));
 assert(!strengthHtml.includes("onclick=\"alert(1)"));
-
-console.log("case list UI smoke tests passed");
