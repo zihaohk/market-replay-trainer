@@ -1139,6 +1139,7 @@ const elements = {
   randomExamButton: document.querySelector("#randomExamButton"),
   newSessionButton: document.querySelector("#newSessionButton"),
   revealButton: document.querySelector("#revealButton"),
+  todayPlanPanel: document.querySelector("#todayPlanPanel"),
   totalEquity: document.querySelector("#totalEquity"),
   homeEquity: document.querySelector("#homeEquity"),
   cashBalance: document.querySelector("#cashBalance"),
@@ -1933,6 +1934,7 @@ function render() {
   renderLearning(selectedCase);
   renderCoursePath();
   renderProfile();
+  renderTodayPlanStrip();
   renderRules();
   renderSignals(selectedCase);
   renderReview(selectedCase);
@@ -4816,6 +4818,30 @@ function renderDailyTrainingPlan(plan) {
     trainingModeLabel,
     displayCaseId: (caseId) => displayCaseId(getCase(caseId)),
   });
+}
+
+function renderTodayPlanStrip() {
+  if (!elements.todayPlanPanel) return;
+  const hideMeta = currentModePolicy().hideCaseMeta && !state.revealed;
+  const trainingQueue = buildTrainingQueue();
+  const plan = buildDailyTrainingPlan({ trainingQueue });
+  const primary = plan.primary || {};
+  const caseLabel = hideMeta ? displayCaseId(getCase(primary.caseId)) : primary.caseId || "A-01";
+  const caseTitle = hideMeta ? "匿名训练任务" : primary.caseTitle || displayCaseTitle(getCase(primary.caseId || state.caseId));
+  const activeText = state.activeTrainingPlan
+    ? `当前计划：${hideMeta ? "匿名任务" : state.activeTrainingPlan.focus}`
+    : "尚未启动计划";
+  elements.todayPlanPanel.innerHTML = `
+    <div class="today-plan-main">
+      <span class="today-plan-kicker">今日建议训练</span>
+      <strong>${escapeHtml(caseLabel)} · ${escapeHtml(caseTitle)}</strong>
+      <p>${escapeHtml(primary.focus || "基础纪律")} · ${Number(plan.estimatedMinutes) || 35} 分钟 · 建议${escapeHtml(trainingModeLabel(plan.modeSuggestion))}</p>
+    </div>
+    <div class="today-plan-actions">
+      <span>${escapeHtml(activeText)}</span>
+      <button class="primary-button small" type="button" data-start-plan-case="${escapeHtml(primary.caseId || "")}" data-start-plan-focus="${escapeHtml(primary.focus || "")}">按建议开始</button>
+    </div>
+  `;
 }
 
 function renderTrainingTrendCard(trend) {
@@ -12735,6 +12761,11 @@ function bindEvents() {
       { selector: "[data-start-mistake-key]", handler: (button) => startMistakeNotebookDrill(MarketReplayEvents.datasetValue(button, "startMistakeKey")) },
       { selector: "[data-start-review-case]", handler: (button) => startReviewScheduleDrill(MarketReplayEvents.datasetValue(button, "startReviewCase"), MarketReplayEvents.datasetValue(button, "startReviewFocus", "间隔复训")) },
       { selector: "[data-start-remediation]", handler: (button) => startRemediation(MarketReplayEvents.datasetValue(button, "startRemediation")) },
+    ]);
+  });
+  elements.todayPlanPanel.addEventListener("click", (event) => {
+    MarketReplayEvents.delegateAction(event, [
+      { selector: "[data-start-plan-case]", handler: (button) => startScheduledTrainingCase(MarketReplayEvents.datasetValue(button, "startPlanCase"), MarketReplayEvents.datasetValue(button, "startPlanFocus")) },
     ]);
   });
   elements.signalsList.addEventListener("click", (event) => {

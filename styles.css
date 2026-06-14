@@ -136,6 +136,52 @@ h2 {
   color: var(--muted);
 }
 
+.today-plan-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid #c8ddd9;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+}
+
+.today-plan-main {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.today-plan-kicker {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.today-plan-main strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.today-plan-main p,
+.today-plan-actions span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.today-plan-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -3033,6 +3079,16 @@ tbody tr:last-child td {
     flex-direction: column;
   }
 
+  .today-plan-strip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .today-plan-actions {
+    justify-content: space-between;
+    width: 100%;
+  }
+
   .price-block {
     text-align: left;
   }
@@ -3068,6 +3124,11 @@ tbody tr:last-child td {
 
   .coach-summary {
     align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .today-plan-actions {
+    align-items: stretch;
     flex-direction: column;
   }
 

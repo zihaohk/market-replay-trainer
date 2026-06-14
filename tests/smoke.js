@@ -1439,6 +1439,9 @@ assert(Number.isFinite(dailyPlan.estimatedMinutes) && ["novice", "advanced", "ex
 vm.runInContext("renderProfile()", context);
 const profileHtmlWithPlan = vm.runInContext("elements.profilePanel.innerHTML", context);
 assert(profileHtmlWithPlan.includes("今日") && profileHtmlWithPlan.includes("daily-plan-card"), "profile should render a daily training plan card");
+vm.runInContext("renderTodayPlanStrip()", context);
+const todayPlanStripHtml = vm.runInContext("elements.todayPlanPanel.innerHTML", context);
+assert(todayPlanStripHtml.includes("今日建议训练") && todayPlanStripHtml.includes("data-start-plan-case") && todayPlanStripHtml.includes("按建议开始"), "top start strip should expose the daily training recommendation on first screen");
 assert(profileHtmlWithPlan.includes("高频根因") && profileHtmlWithPlan.includes("执行纪律"), "profile should render frequent root causes");
 assert(profileHtmlWithPlan.includes("样本质量") && profileHtmlWithPlan.includes("有效盲测"), "profile should render training sample quality");
 assert(profileHtmlWithPlan.includes("真实考试成绩") && profileHtmlWithPlan.includes("有效考试"), "profile should render valid blind exam performance separately");
@@ -1452,6 +1455,7 @@ assert(profileHtmlWithPlan.includes("间隔复训日程") && profileHtmlWithPlan
 vm.runInContext("const q = buildTrainingQueue({ averageCoachScore: 60, missionPassRate: 50, lessonPassRate: 80, lessonFirstTryRate: 50 }); startScheduledTrainingCase(q[0].caseId, q[0].focus);", context);
 const activePlan = vm.runInContext("state.activeTrainingPlan", context);
 assert(activePlan && activePlan.caseId === vm.runInContext("state.caseId", context) && activePlan.passCriteria.length >= 3, "starting a scheduled training should persist the active plan");
+assert(vm.runInContext("elements.todayPlanPanel.innerHTML.includes('当前计划')", context), "top start strip should reflect the active training plan after launch");
 const missionPanelWithPlan = vm.runInContext("elements.missionPanel.innerHTML", context);
 assert(missionPanelWithPlan.includes("今日训练计划") && (activePlan.launchMode === "random-blind" ? missionPanelWithPlan.includes("强盲测") : missionPanelWithPlan.includes(activePlan.focus)), "mission panel should show the active training plan");
 assert(activePlan.launchMode !== "random-blind" || vm.runInContext("state.mode === 'exam' && state.blindSession.active && state.blindSession.random", context), "blind sample training plans should launch directly into a random exam");
