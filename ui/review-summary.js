@@ -804,14 +804,17 @@
   function renderSourcePack(items, helpers) {
     return `
     <div class="evidence-source-grid">
-      ${items.map((item) => `
-        <article class="evidence-source-card external-source-card">
-          <strong>${helpers.escapeHtml(item.title)}</strong>
-          <span>${helpers.escapeHtml(item.publisher)} · ${helpers.escapeHtml(item.date)} · ${helpers.escapeHtml(item.kind)}</span>
-          <p>${helpers.escapeHtml(item.reason)}</p>
-          ${item.url ? `<a href="${helpers.escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">打开资料</a>` : `<span>无外部链接</span>`}
-        </article>
-      `).join("") || `<article class="evidence-source-card external-source-card"><p>本案例没有内置外部资料。导入自己的案例时，请在复盘里手动补充来源。</p></article>`}
+      ${items.map((item) => {
+        const safeHref = helpers.safeUrl(item.url);
+        return `
+          <article class="evidence-source-card external-source-card">
+            <strong>${helpers.escapeHtml(item.title)}</strong>
+            <span>${helpers.escapeHtml(item.publisher)} · ${helpers.escapeHtml(item.date)} · ${helpers.escapeHtml(item.kind)}</span>
+            <p>${helpers.escapeHtml(item.reason)}</p>
+            ${safeHref ? `<a href="${helpers.escapeHtml(safeHref)}" target="_blank" rel="noopener noreferrer">打开资料</a>` : `<span>${item.url ? "链接已拦截" : "无外部链接"}</span>`}
+          </article>
+        `;
+      }).join("") || `<article class="evidence-source-card external-source-card"><p>本案例没有内置外部资料。导入自己的案例时，请在复盘里手动补充来源。</p></article>`}
     </div>
   `;
   }
@@ -902,6 +905,7 @@
   function buildHelpers(options) {
     return {
       escapeHtml: typeof options.escapeHtml === "function" ? options.escapeHtml : defaultEscapeHtml,
+      safeUrl: typeof options.safeUrl === "function" ? options.safeUrl : defaultSafeUrl,
       formatPercent: typeof options.formatPercent === "function" ? options.formatPercent : defaultFormatPercent,
       formatPlainPercent: typeof options.formatPlainPercent === "function" ? options.formatPlainPercent : defaultFormatPlainPercent,
       formatCurrency: typeof options.formatCurrency === "function" ? options.formatCurrency : defaultFormatCurrency,
@@ -991,6 +995,18 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function defaultSafeUrl(value) {
+    const text = String(value ?? "").trim();
+    if (!text) return "";
+    if (typeof URL !== "function") return /^https?:\/\//i.test(text) ? text : "";
+    try {
+      const url = new URL(text);
+      return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+    } catch (_) {
+      return "";
+    }
   }
 
   return {

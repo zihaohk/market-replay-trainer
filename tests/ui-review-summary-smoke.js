@@ -94,6 +94,13 @@ const review = {
         kind: "官方资料",
         reason: "核对流动性背景。",
         url: "https://example.com/fed?x=1&y=2",
+      }, {
+        title: "<img src=x onerror=alert(1)>",
+        publisher: "Unsafe source",
+        date: "2020-03-02",
+        kind: "恶意链接",
+        reason: "危险链接应该被拦截。",
+        url: "javascript:alert(1)",
       }],
     },
     timeline: [{
@@ -135,6 +142,9 @@ assert(evidenceHtml.includes("数据来源核对"));
 assert(evidenceHtml.includes("ETF-A · SPY"));
 assert(evidenceHtml.includes("复盘资料包"));
 assert(evidenceHtml.includes("https://example.com/fed?x=1&amp;y=2"));
+assert(evidenceHtml.includes("&lt;img src=x onerror=alert(1)&gt;"));
+assert(evidenceHtml.includes("链接已拦截"));
+assert(!evidenceHtml.includes("href=\"javascript:alert(1)\""));
 assert(evidenceHtml.includes("事件证据时间线"));
 assert(evidenceHtml.includes("第 2 天 · 2020-02-03"));
 assert(evidenceHtml.includes("新闻判断校准"));

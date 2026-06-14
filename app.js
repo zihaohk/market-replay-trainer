@@ -2026,20 +2026,21 @@ function renderCaseList(selectedCase) {
       const title = displayCaseTitle(item);
       const brief = displayCaseBrief(item);
       const idLabel = displayCaseId(item);
+      const safeCaseId = escapeHtml(item.id);
       const deleteButton = item.kind === "custom"
-        ? `<button class="mini-danger-button" type="button" data-delete-case-id="${item.id}">删除</button>`
+        ? `<button class="mini-danger-button" type="button" data-delete-case-id="${safeCaseId}">删除</button>`
         : "";
       return `
-        <div class="case-card${selected}${locked}" data-case-id="${item.id}">
-          <button class="case-main-button" type="button" data-case-id="${item.id}" ${status.unlocked ? "" : "disabled"}>
-            <strong>${idLabel} · ${title}</strong>
-            <span>${item.level} · ${dataLabel} · ${status.label}</span>
-            <p>${brief}</p>
-            <div class="case-mastery-line is-${mastery.level}">
-              <span>${mastery.label}</span>
+        <div class="case-card${selected}${locked}" data-case-id="${safeCaseId}">
+          <button class="case-main-button" type="button" data-case-id="${safeCaseId}" ${status.unlocked ? "" : "disabled"}>
+            <strong>${escapeHtml(idLabel)} · ${escapeHtml(title)}</strong>
+            <span>${escapeHtml(item.level)} · ${escapeHtml(dataLabel)} · ${escapeHtml(status.label)}</span>
+            <p>${escapeHtml(brief)}</p>
+            <div class="case-mastery-line is-${escapeHtml(mastery.level)}">
+              <span>${escapeHtml(mastery.label)}</span>
               <small>${escapeHtml(mastery.detail)}</small>
             </div>
-            <div class="course-meta">${recommended}<span class="tag ${mastery.level === "mastered" ? "real" : mastery.level === "needs-work" ? "important" : ""}">${mastery.label}</span><span class="tag ${status.unlocked ? "" : "locked"}">${status.reason}</span></div>
+            <div class="course-meta">${recommended}<span class="tag ${mastery.level === "mastered" ? "real" : mastery.level === "needs-work" ? "important" : ""}">${escapeHtml(mastery.label)}</span><span class="tag ${status.unlocked ? "" : "locked"}">${escapeHtml(status.reason)}</span></div>
           </button>
           ${deleteButton}
         </div>
@@ -2064,16 +2065,16 @@ function renderCaseLibraryCoverage(cases = allCases()) {
   }
   const weakRows = report.rows.filter((row) => row.level !== "good");
   elements.caseLibraryCoverage.innerHTML = `
-    <section class="library-coverage-card is-${report.level}">
+    <section class="library-coverage-card is-${escapeHtml(report.level)}">
       <div class="library-coverage-head">
-        <strong>${report.summary}</strong>
+        <strong>${escapeHtml(report.summary)}</strong>
         <span>${report.covered}/${report.totalDimensions} 类达标</span>
       </div>
       <div class="library-coverage-grid">
         ${report.rows.map((row) => `
-          <article class="library-coverage-row is-${row.level}">
+          <article class="library-coverage-row is-${escapeHtml(row.level)}">
             <div>
-              <strong>${row.label}</strong>
+              <strong>${escapeHtml(row.label)}</strong>
               <span>${row.count}/${row.target} 个案例</span>
             </div>
             <small>${row.score}/100</small>
@@ -2134,9 +2135,9 @@ function renderCaseBrief(selectedCase) {
     ? `${selectedCase.realPeriod}。${selectedCase.dataQuality}`
     : displayCaseBrief(selectedCase);
   elements.caseTags.innerHTML = [
-    ...displayCaseTags(selectedCase).map((tag) => `<span class="tag">${tag}</span>`),
+    ...displayCaseTags(selectedCase).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`),
     ...(state.activeRemediation ? [`<span class="tag important">补练中</span>`] : []),
-    `<span class="tag ${selectedCase.kind === "synthetic" ? "important" : "real"}">${displayCaseKindLabel(selectedCase)}</span>`,
+    `<span class="tag ${selectedCase.kind === "synthetic" ? "important" : "real"}">${escapeHtml(displayCaseKindLabel(selectedCase))}</span>`,
   ].join("");
 }
 
@@ -2150,10 +2151,10 @@ function renderWatchlist(selectedCase) {
       const selected = item.maskedSymbol === state.selectedSymbol ? " is-selected" : "";
       const displaySymbol = displayAssetSymbol(item);
       return `
-        <button class="watch-row${selected}" type="button" data-symbol="${item.maskedSymbol}">
+        <button class="watch-row${selected}" type="button" data-symbol="${escapeHtml(item.maskedSymbol)}">
           <span>
-            <strong>${displaySymbol}</strong>
-            <span class="symbol-name">${displayAssetName(item)}</span>
+            <strong>${escapeHtml(displaySymbol)}</strong>
+            <span class="symbol-name">${escapeHtml(displayAssetName(item))}</span>
           </span>
           <span class="row-price">
             <strong>${formatCurrency(price)}</strong>
@@ -2168,16 +2169,16 @@ function renderWatchlist(selectedCase) {
 function renderRelativeStrengthPanel(selectedCase) {
   const panel = buildRelativeStrengthPanel(selectedCase);
   elements.relativeStrengthPanel.innerHTML = `
-    <div class="relative-summary is-${panel.regime.level}">
-      <strong>${panel.regime.title}</strong>
-      <p>${panel.regime.detail}</p>
+    <div class="relative-summary is-${escapeHtml(panel.regime.level)}">
+      <strong>${escapeHtml(panel.regime.title)}</strong>
+      <p>${escapeHtml(panel.regime.detail)}</p>
     </div>
     <div class="relative-table">
       ${panel.rows.map((row) => `
-        <button class="relative-row${row.symbol === state.selectedSymbol ? " is-selected" : ""}" type="button" data-symbol="${row.symbol}">
+        <button class="relative-row${row.symbol === state.selectedSymbol ? " is-selected" : ""}" type="button" data-symbol="${escapeHtml(row.symbol)}">
           <span>
-            <strong>${row.displaySymbol}</strong>
-            <small>${row.roleLabel}</small>
+            <strong>${escapeHtml(row.displaySymbol)}</strong>
+            <small>${escapeHtml(row.roleLabel)}</small>
           </span>
           <span>
             <strong class="${row.totalReturnPct >= 0 ? "positive" : "negative"}">${formatPercent(row.totalReturnPct)}</strong>
@@ -6480,7 +6481,7 @@ function renderSignals(selectedCase) {
   const forecast = state.signalForecasts?.[state.day] || {};
   const answered = forecast && forecast.outlook;
   elements.signalsList.innerHTML = signals
-    .map((signal) => `<div class="signal-item"><strong>${policy.showSignalDetails || state.revealed ? signal.title : "关键节点"}</strong><p>${policy.showSignalDetails || state.revealed ? signal.detail : "考试模式只提示你需要暂停思考，不给出原因。"}</p></div>`)
+    .map((signal) => `<div class="signal-item"><strong>${escapeHtml(policy.showSignalDetails || state.revealed ? signal.title : "关键节点")}</strong><p>${escapeHtml(policy.showSignalDetails || state.revealed ? signal.detail : "考试模式只提示你需要暂停思考，不给出原因。")}</p></div>`)
     .join("")
     + (state.revealed ? "" : `
       <div class="signal-forecast-card">
@@ -6510,6 +6511,7 @@ function renderSignals(selectedCase) {
 function renderReviewEvidenceIntro(review) {
   return MarketReplayReviewSummaryUI.renderReviewEvidenceIntro(review, {
     escapeHtml,
+    safeUrl,
     formatPercent,
     formatPlainPercent,
     displayDay,
@@ -6889,9 +6891,9 @@ function renderRiskDashboard(selectedCase) {
       </div>
       <div class="risk-alerts">
         ${dashboard.alerts.map((alert) => `
-          <div class="risk-alert is-${alert.level}">
-            <strong>${alert.title}</strong>
-            <span>${alert.detail}</span>
+          <div class="risk-alert is-${escapeHtml(alert.level)}">
+            <strong>${escapeHtml(alert.title)}</strong>
+            <span>${escapeHtml(alert.detail)}</span>
           </div>
         `).join("")}
       </div>
@@ -6957,7 +6959,7 @@ function renderCheckpointLogPanel(selectedCase = getCase()) {
         <label>
           复查标的
           <select id="checkpointSymbolInput">
-            ${symbols.map((symbol) => `<option value="${symbol}" ${symbol === state.selectedSymbol ? "selected" : ""}>${symbol}</option>`).join("")}
+            ${symbols.map((symbol) => `<option value="${escapeHtml(symbol)}" ${symbol === state.selectedSymbol ? "selected" : ""}>${escapeHtml(symbol)}</option>`).join("")}
           </select>
         </label>
         <label>
@@ -7003,8 +7005,8 @@ function renderCheckpointLogRow(log) {
   return `
     <div class="position-plan-row is-${log.riskChanged || log.bias === "deteriorating" ? "warn" : "good"}">
       <div class="exposure-title">
-        <strong>${log.symbol} · 第 ${displayDay(log.day)} 天复查</strong>
-        <span>${checkpointBiasLabel(log.bias)} · ${checkpointActionLabel(log.action)}</span>
+        <strong>${escapeHtml(log.symbol)} · 第 ${displayDay(log.day)} 天复查</strong>
+        <span>${escapeHtml(checkpointBiasLabel(log.bias))} · ${escapeHtml(checkpointActionLabel(log.action))}</span>
       </div>
       <p>${escapeHtml(log.note || "")}</p>
     </div>
@@ -7015,37 +7017,37 @@ function renderExposureRow(row) {
   return `
     <div class="exposure-row">
       <div class="exposure-title">
-        <strong>${row.label}</strong>
+        <strong>${escapeHtml(row.label)}</strong>
         <span>${formatPlainPercent(row.weightPct)}</span>
       </div>
-      <div class="exposure-bar"><div class="exposure-fill ${row.level}" style="width:${Math.min(100, Math.max(0, row.weightPct))}%"></div></div>
-      <span>${row.detail}</span>
+      <div class="exposure-bar"><div class="exposure-fill ${escapeHtml(row.level || "")}" style="width:${Math.min(100, Math.max(0, row.weightPct))}%"></div></div>
+      <span>${escapeHtml(row.detail)}</span>
     </div>
   `;
 }
 
 function renderStressRow(row) {
   return `
-    <div class="stress-row is-${row.level}">
+    <div class="stress-row is-${escapeHtml(row.level)}">
       <div class="exposure-title">
-        <strong>${row.label}</strong>
-        <span>${row.shock}</span>
+        <strong>${escapeHtml(row.label)}</strong>
+        <span>${escapeHtml(row.shock)}</span>
       </div>
       <div class="stress-metrics">
         <span>潜在亏损 ${formatCurrency(row.loss)}</span>
         <span>权益影响 ${formatPlainPercent(row.lossPct)}</span>
         <span>冲击后 ${formatCurrency(row.afterEquity)}</span>
       </div>
-      <p>${row.detail}</p>
+      <p>${escapeHtml(row.detail)}</p>
     </div>
   `;
 }
 
 function renderGapRiskRow(row) {
   return `
-    <div class="position-plan-row is-${row.level}">
+    <div class="position-plan-row is-${escapeHtml(row.level)}">
       <div class="exposure-title">
-        <strong>${row.symbol} · ${row.name}</strong>
+        <strong>${escapeHtml(row.symbol)} · ${escapeHtml(row.name)}</strong>
         <span>${formatPercent(row.gapPct)}</span>
       </div>
       <div class="plan-metrics">
@@ -7053,7 +7055,7 @@ function renderGapRiskRow(row) {
         <span>今开 ${formatCurrency(row.open)}</span>
         <span>日内 ${formatPercent(row.dayChangePct)}</span>
       </div>
-      <p>${row.detail}</p>
+      <p>${escapeHtml(row.detail)}</p>
     </div>
   `;
 }
@@ -7076,19 +7078,19 @@ function renderEventRiskRow(row) {
 
 function renderPositionPlanRow(row) {
   return `
-    <div class="position-plan-row is-${row.level}">
+    <div class="position-plan-row is-${escapeHtml(row.level)}">
       <div class="exposure-title">
-        <strong>${row.title}</strong>
-        <span>${row.statusLabel}</span>
+        <strong>${escapeHtml(row.title)}</strong>
+        <span>${escapeHtml(row.statusLabel)}</span>
       </div>
       <div class="plan-metrics">
         <span>浮动 ${formatCurrency(row.unrealizedPnl)} / ${formatPlainPercent(row.pnlPct)}</span>
         <span>最大不利 ${formatPlainPercent(row.maxAdversePct)}</span>
         <span>${row.riskLimitPct ? `自定亏损线 ${formatPlainPercent(row.riskLimitPct)}` : "未写亏损线"}</span>
       </div>
-      <p>${row.detail}</p>
+      <p>${escapeHtml(row.detail)}</p>
       <p><strong>失效条件：</strong>${escapeHtml(row.invalidation)}</p>
-      <p><strong>下一步：</strong>${row.actionHint}</p>
+      <p><strong>下一步：</strong>${escapeHtml(row.actionHint)}</p>
     </div>
   `;
 }
@@ -7097,10 +7099,10 @@ function renderAllocationRow(row) {
   return `
     <div class="position-plan-row is-${row.status === "fail" ? "danger" : row.status === "warn" || row.status === "pending" ? "warn" : "good"}">
       <div class="exposure-title">
-        <strong>${row.title}</strong>
-        <span>${missionStatusLabel(row.status)}</span>
+        <strong>${escapeHtml(row.title)}</strong>
+        <span>${escapeHtml(missionStatusLabel(row.status))}</span>
       </div>
-      <p>${row.detail}</p>
+      <p>${escapeHtml(row.detail)}</p>
     </div>
   `;
 }
@@ -7124,12 +7126,12 @@ function renderFundingDashboardRows(funding) {
     },
   ];
   return rows.map((row) => `
-    <div class="position-plan-row is-${row.status}">
+    <div class="position-plan-row is-${escapeHtml(row.status)}">
       <div class="exposure-title">
-        <strong>${row.title}</strong>
+        <strong>${escapeHtml(row.title)}</strong>
         <span>${row.status === "good" ? "已纳入" : "需注意"}</span>
       </div>
-      <p>${row.detail}</p>
+      <p>${escapeHtml(row.detail)}</p>
     </div>
   `).join("");
 }
@@ -7157,12 +7159,12 @@ function renderSettlementDashboardRows(settlement) {
     },
   ];
   return rows.map((row) => `
-    <div class="position-plan-row is-${row.status}">
+    <div class="position-plan-row is-${escapeHtml(row.status)}">
       <div class="exposure-title">
-        <strong>${row.title}</strong>
+        <strong>${escapeHtml(row.title)}</strong>
         <span>${row.status === "good" ? "正常" : "需注意"}</span>
       </div>
-      <p>${row.detail}</p>
+      <p>${escapeHtml(row.detail)}</p>
     </div>
   `).join("");
 }
@@ -13049,13 +13051,25 @@ function roundPrice(value) {
 }
 
 function escapeHtml(value) {
-  return value.replace(/[&<>"']/g, (char) => ({
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
     "'": "&#039;",
   })[char]);
+}
+
+function safeUrl(value) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  if (typeof URL !== "function") return /^https?:\/\//i.test(text) ? text : "";
+  try {
+    const url = new URL(text);
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch (_) {
+    return "";
+  }
 }
 
 function bindEvents() {

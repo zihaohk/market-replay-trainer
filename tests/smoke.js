@@ -154,6 +154,55 @@ assert(vm.runInContext("allCases().filter(c => c.kind === 'historical').every(c 
 assert(vm.runInContext("getCase('S-10').sourcePack.summary.includes('心理') && getCase('S-10').sourcePack.items[0].kind === '训练说明'", context), "synthetic cases should explain that they are not real news events");
 assert(vm.runInContext("allCases().filter(c => c.assets[0]?.source === 'starter-builtin').length === 11 && getCase('C-011').maskedTitle.includes('订单')", context), "starter classic cases should be available as built-in training cases");
 
+context.maliciousPackageText = JSON.stringify({
+  title: "Unsafe package",
+  maskedTitle: "<img src=x onerror=alert(1)>",
+  maskedBrief: "Brief <script>alert(1)</script>",
+  revealTitle: "Unsafe reveal",
+  realPeriod: "2024-01-02 至 2024-01-03",
+  tags: ["<b>tag</b>"],
+  assets: [{
+    symbol: "BAD",
+    maskedSymbol: "BAD\" onclick=\"alert(1)",
+    maskedName: "<svg onload=alert(1)>",
+    type: "stock",
+    sector: "custom",
+    rows: [
+      { date: "2024-01-02", open: 100, high: 105, low: 99, close: 103, volume: 1000000 },
+      { date: "2024-01-03", open: 103, high: 106, low: 101, close: 104, volume: 1000000 },
+    ],
+  }, {
+    symbol: "SPY",
+    maskedSymbol: "SAFE-B",
+    maskedName: "Benchmark",
+    type: "etf",
+    sector: "market",
+    rows: [
+      { date: "2024-01-02", open: 100, high: 101, low: 99, close: 100, volume: 1000000 },
+      { date: "2024-01-03", open: 100, high: 102, low: 99, close: 101, volume: 1000000 },
+    ],
+  }],
+  news: [{ day: 0, title: "Unsafe <img src=x>", category: "important" }],
+  sourcePack: { items: [{ title: "Unsafe link", url: "javascript:alert(1)", reason: "block" }] },
+});
+const escapedMaliciousUi = vm.runInContext(`
+  const maliciousCase = createImportedScenarioPackageCase(maliciousPackageText);
+  customCaseLibrary = [maliciousCase];
+  state = defaultState(maliciousCase.id, 'novice');
+  renderCaseList(maliciousCase);
+  renderCaseBrief(maliciousCase);
+  renderWatchlist(maliciousCase);
+  renderRelativeStrengthPanel(maliciousCase);
+  elements.caseList.innerHTML + elements.caseTags.innerHTML + elements.watchlist.innerHTML + elements.relativeStrengthPanel.innerHTML;
+`, context);
+assert(!escapedMaliciousUi.includes("<img src=x onerror=alert(1)>"), "imported package title should not render raw image HTML");
+assert(!escapedMaliciousUi.includes("<script>alert(1)</script>"), "imported package brief should not render raw script HTML");
+assert(!escapedMaliciousUi.includes("<svg onload=alert(1)>"), "imported package asset name should not render raw SVG HTML");
+assert(!escapedMaliciousUi.includes('data-symbol="BAD" onclick="alert(1)"'), "imported package symbols should not break out of data attributes");
+assert(escapedMaliciousUi.includes("&lt;img src=x onerror=alert(1)&gt;"), "imported package title should be escaped as visible text");
+assert(escapedMaliciousUi.includes("&lt;svg onload=alert(1)&gt;"), "imported package asset name should be escaped as visible text");
+vm.runInContext("customCaseLibrary = [];", context);
+
 vm.runInContext("state = defaultState('C-03', 'exam'); renderCaseList(getCase('C-03')); renderCaseBrief(getCase('C-03')); renderTradeForm(getCase('C-03')); renderLearning(getCase('C-03')); renderCoursePath(); renderProfile();", context);
 const examCaseListHtml = vm.runInContext("elements.caseList.innerHTML", context);
 const examCaseBriefText = vm.runInContext("elements.caseTitle.textContent + ' ' + elements.caseBrief.textContent + ' ' + elements.caseTags.innerHTML", context);
